@@ -2,17 +2,19 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import SideMenu from "../components/SideMenu";
 import LinkModal from "../components/LinkModal";
+import InfoModal from "../components/InfoModal"; // Add this import
 import { useVisaBuddy } from "../hooks/useVisaBuddy";
 import type { Message, ChatItem } from "../types/visa_buddy";
 import Maple from "../images/maple.svg"
 import Logo from "../images/Logo.svg";
-import { PanelLeft, MessageCirclePlus, Link, Send } from "lucide-react";
+import { PanelLeft, MessageCirclePlus, Link, Send, Info } from "lucide-react";
 
 const STORAGE_KEY = "visabuddy-chats";
 
 const ChatInterface: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false); // Add this state
   const [activeChat, setActiveChat] = useState<string | null>(null);
   const [chats, setChats] = useState<ChatItem[]>([]);
   const [inputMessage, setInputMessage] = useState("");
@@ -235,13 +237,25 @@ const ChatInterface: React.FC = () => {
             )}
 
             {isMenuOpen && (
-              <motion.button
-                onClick={() => setIsLinkModalOpen(true)}
-                className="w-10 h-10 flex items-center justify-center cursor-pointer text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <Link size={22} />
-              </motion.button>
+              <div className="flex items-center gap-3">
+                <motion.button
+                  onClick={() => setIsLinkModalOpen(true)}
+                  className="w-10 h-10 flex items-center justify-center cursor-pointer text-gray-700 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <Link size={22} />
+                </motion.button>
+              </div>
             )}
+
+            {/* Info Button - Top Right Corner */}
+            <motion.button
+              onClick={() => setIsInfoModalOpen(true)}
+              className="w-10 h-10 flex items-center justify-center text-gray-700 hover:bg-gray-100 rounded-full cursor-pointer transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Info size={22} />
+            </motion.button>
           </div>
         </header>
 
@@ -329,6 +343,11 @@ const ChatInterface: React.FC = () => {
         connectionStatus={connectionStatus}
         onUpdateUrl={updateApiUrl}
         onClearChat={clearVisaBuddyChat}
+      />
+
+      <InfoModal
+        isOpen={isInfoModalOpen}
+        onClose={() => setIsInfoModalOpen(false)}
       />
     </div>
   );
