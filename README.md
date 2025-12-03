@@ -43,6 +43,9 @@ You run the model in Colab, expose it through Cloudflare, then paste the tunnel 
   - Tailwind CSS 4
   - Framer Motion / Motion for animations
   - `lucide-react` icons
+ 
+- **UX/UI**
+  - Figma
 
 - **Backend / Modeling (notebooks)**
   - Crawler & preprocessing: `requests`, `beautifulsoup4`, `trafilatura`, `pdfplumber`, `nltk`, `re`, `pandas`
