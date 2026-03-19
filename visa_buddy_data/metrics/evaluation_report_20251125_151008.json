@@ -1,0 +1,110 @@
+{
+  "report_metadata": {
+    "project_name": "Visa Buddy - Canadian Immigration Assistant",
+    "report_timestamp": "2025-11-25 15:10:08",
+    "report_version": "2.0",
+    "evaluation_scope": "Comprehensive System Performance with Analysis",
+    "benchmarks_used": {
+      "relevance_score": 0.6,
+      "success_rate": 85.0,
+      "documents_per_query": 2.5,
+      "training_loss": 1.5
+    }
+  },
+  "executive_summary": {
+    "overall_status": "Under Development",
+    "key_strengths": [
+      "System architecture in place"
+    ],
+    "key_improvements": [
+      "Enhance retrieval relevance scores",
+      "Expand knowledge base coverage",
+      "Improve query understanding"
+    ],
+    "readiness_level": "Development Phase"
+  },
+  "system_configuration": {
+    "base_model": "Not specified",
+    "embedding_model": "Not specified",
+    "vector_database": "Direct File Access",
+    "rag_enabled": true,
+    "fine_tuning_approach": "QLoRA",
+    "knowledge_base_format": "Text chunks from Canada.ca"
+  },
+  "performance_analysis": {
+    "rag_performance": {
+      "status": "No RAG performance data available"
+    },
+    "training_performance": {
+      "status": "No training data available"
+    }
+  },
+  "system_health": {
+    "knowledge_base_documents": "Unknown",
+    "available_chunks": "Unknown",
+    "data_freshness": "Current (2024 Canada.ca content)",
+    "coverage_areas": [
+      "Express Entry",
+      "Study Permits",
+      "Work Permits",
+      "Visitor Visas"
+    ],
+    "system_reliability": "Medium"
+  },
+  "risk_assessment": {
+    "technical_risks": [
+      {
+        "risk": "Knowledge gaps in specific immigration areas",
+        "severity": "Medium",
+        "mitigation": "Expand content coverage"
+      },
+      {
+        "risk": "Retrieval relevance variability",
+        "severity": "Low",
+        "mitigation": "Improve embedding quality"
+      },
+      {
+        "risk": "Model hallucination potential",
+        "severity": "Low",
+        "mitigation": "Maintain RAG grounding"
+      }
+    ],
+    "operational_risks": [
+      {
+        "risk": "Content updates required",
+        "severity": "Low",
+        "mitigation": "Regular crawling schedule"
+      },
+      {
+        "risk": "Performance degradation",
+        "severity": "Low",
+        "mitigation": "Monitoring and optimization"
+      }
+    ]
+  },
+  "recommendations": {
+    "immediate_actions": [
+      "Validate responses for high-stakes immigration questions",
+      "Expand knowledge base to cover all major visa categories",
+      "Implement response quality monitoring"
+    ],
+    "short_term_improvements": [
+      "Enhance retrieval algorithms for better relevance",
+      "Add more diverse test queries for evaluation",
+      "Implement user feedback collection"
+    ],
+    "long_term_goals": [
+      "Achieve 85%+ retrieval success rate",
+      "Reduce response generation latency",
+      "Expand to provincial nomination programs"
+    ]
+  },
+  "performance_rating": {
+    "rag_retrieval_quality": "Not rated",
+    "system_reliability": "High",
+    "response_quality": "To be evaluated with human feedback",
+    "knowledge_coverage": "Limited",
+    "overall_system_score": "Not rated",
+    "readiness_for_production": "Under Development"
+  }
+}

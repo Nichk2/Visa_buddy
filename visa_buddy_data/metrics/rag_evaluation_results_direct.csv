@@ -1,0 +1,37 @@
+query_id,query,retrieved_count,avg_score,avg_relevance,max_score,successful_retrieval,top_doc_preview,retrieval_method
+Q1,What is Express Entry and how does it work?,3,0.6037037037037037,0.7777777777777778,0.6111111111111112,True,"Create your profile and enter the pool
+On this page
+- How the pools work
+- Create your profile
+- How we rank your profile
+- Keep your profile up-to-da...",direct_file_search
+Q2,How to apply for a study permit in Canada?,3,0.3962962962962963,0.7777777777777778,0.4111111111111111,True,"recalculated score is less than the lowest score in your round of invitations, you should decline the invitation. If you decide to apply anyway, we ma...",direct_file_search
+Q3,What documents are needed for a work visa?,3,0.46249999999999997,0.7916666666666666,0.575,True,"Apply for permanent residence
+On this page
+1. Fill out the application form
+If we invite you to apply for permanent residence, you'll get a message in...",direct_file_search
+Q4,What is PGWP eligibility criteria?,3,0.3,0.6,0.3,True,"Check your score
+We no longer give points for job offers
+As of March 25, 2025, we’re removing job offer points from the Comprehensive Ranking System f...",direct_file_search
+Q5,How long does visa processing take?,3,0.2722222222222222,0.16666666666666666,0.33333333333333337,True,"Apply for permanent residence
+On this page
+1. Fill out the application form
+If we invite you to apply for permanent residence, you'll get a message in...",direct_file_search
+Q6,What are the requirements for family sponsorship?,3,0.3904761904761904,0.7619047619047619,0.42857142857142855,True,"recalculated score is less than the lowest score in your round of invitations, you should decline the invitation. If you decide to apply anyway, we ma...",direct_file_search
+Q7,How much funds needed for student visa?,3,0.29523809523809524,0.2857142857142857,0.3,True,"Apply for permanent residence
+On this page
+1. Fill out the application form
+If we invite you to apply for permanent residence, you'll get a message in...",direct_file_search
+Q8,What is the difference between PR and citizenship?,3,0.32916666666666666,0.4583333333333333,0.3375,True,"Check your score
+We no longer give points for job offers
+As of March 25, 2025, we’re removing job offer points from the Comprehensive Ranking System f...",direct_file_search
+Q9,Can I work while on a study permit?,3,0.3375000000000001,0.625,0.3375,True,"Create your profile and enter the pool
+On this page
+- How the pools work
+- Create your profile
+- How we rank your profile
+- Keep your profile up-to-da...",direct_file_search
+Q10,How to extend visitor visa in Canada?,3,0.39999999999999997,0.4761904761904761,0.5142857142857142,True,"If we approve your application
+If we approve your application, we’ll mail you:
+- a confirmation of permanent residence (COPR)
+- a permanent resident (...",direct_file_search
