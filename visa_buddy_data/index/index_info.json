@@ -1,0 +1,7 @@
+{
+ "embed_model": "sentence-transformers/all-MiniLM-L6-v2",
+ "chunks": 3566,
+ "dim": 384,
+ "normalized": true,
+ "similarity": "cosine (dot product)"
+}
