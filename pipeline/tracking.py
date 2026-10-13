@@ -36,6 +36,8 @@ def _files(paths) -> dict:
     out = {}
     for p in paths or []:
         p = Path(p)
+        if not p.is_absolute():
+            p = ROOT / p
         if p.is_file():
             out[str(p.relative_to(ROOT))] = sha256(p)
     return out

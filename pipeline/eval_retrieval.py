@@ -27,6 +27,9 @@ TARGET = 0.7
 
 
 def main(gold_path: Path = GOLD_V1):
+    suffix = "" if Path(gold_path).name == GOLD_V1.name else "_" + Path(gold_path).stem  # e.g. _gold_v2
+    PRED = EVAL_DIR / f"retrieval_predictions{suffix}.jsonl"
+    REPORT = EVAL_DIR / f"retrieval_report{suffix}.json"
     gold = [json.loads(l) for l in Path(gold_path).read_text().splitlines() if l.strip()]
     ret = Retriever()
     preds = []

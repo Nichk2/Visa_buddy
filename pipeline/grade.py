@@ -14,7 +14,7 @@ import re
 
 from .config import OFFICIAL_INDEX_URL
 from .prompt import REFUSAL
-from .text import fact_in, norm
+from .text import fact_in, key_in, norm
 
 URL_RE = re.compile(r"https?://[^\s)\]>,\"']+")
 # A number plus an optional unit word, e.g. "$15,263", "24 hours", "180 days", "CLB 7", "1,095".
@@ -56,7 +56,12 @@ def _number_in(n: str, ctx_n: str) -> bool:
     return re.search(rf"(?<![\d.]){re.escape(digits)}(?![\d])", flat) is not None
 
 
-def grade(answer: str, hits: list[dict], gold: dict) -> dict:
+GRADER_VERSION = 2
+
+
+def grade(answer: str, hits: list[dict], gold: dict, version: int = GRADER_VERSION) -> dict:
+    """version=1 reproduces the original grading; version=2 matches each fact by its
+    accepted keys (gold_v2 `fact_keys`) after money/contraction canonicalization."""
     ctx = "\n".join(h["text"] for h in hits)
     ctx_n = norm(ctx)
     retrieved = {h["url"] for h in hits}
@@ -69,8 +74,13 @@ def grade(answer: str, hits: list[dict], gold: dict) -> dict:
             unsupported_claims.append(n)
 
     facts = gold.get("expected_facts", [])
-    supported = [f for f in facts if fact_in(f, answer) and fact_in(f, ctx)]
+    if version >= 2 and gold.get("fact_keys"):
+        supported = [f for f, keys in zip(facts, gold["fact_keys"])
+                     if any(key_in(k, answer) and key_in(k, ctx) for k in keys)]
+    else:
+        supported = [f for f in facts if fact_in(f, answer) and fact_in(f, ctx)]
     return {
+        "grader_version": version,
         "citation_hit": bool(cited & retrieved),
         "fact_coverage": (len(supported) / len(facts)) if facts else None,
         "facts_supported": supported,

@@ -23,6 +23,9 @@ RUNS = {
     "index": "2e8249737c2c",
     "retrieval": "933a39ed6a15",
     "baseline": "dae69d130eea",
+    "goldV2": "790993006110",
+    "retrievalGoldV2": "a6e8c331926c",
+    "baselineGoldV2": "f851708cd6b9",
     "train": None,      # step 6
     "adapterEval": None,  # step 7
 }
@@ -83,6 +86,15 @@ def build():
         "oldQueries": [{k: q[k] for k in ("id", "query", "want", "v1_top_preview", "v1_top_program", "v2_top_title", "v2_top_program")}
                        for q in legacy_rows],
         "baseline": r["baseline"] and r["baseline"]["metrics"],
+        "measurementAudit": {
+            "goldV2Sha256": r["goldV2"]["outputs"]["eval/gold_v2.jsonl"],
+            "extraSourceUrls": r["goldV2"]["metrics"]["extra_source_urls"],
+            "recallAt5": {"goldV1": pct(retr["answerable"]["recall@5"]),
+                          "goldV2": pct(r["retrievalGoldV2"]["metrics"]["answerable"]["recall@5"])},
+            "baselineFactCoverage": {"goldV1": pct(r["baseline"]["metrics"]["overall"]["fact_coverage"]),
+                                     "goldV2": pct(r["baselineGoldV2"]["metrics"]["overall"]["fact_coverage"])},
+        },
+        "baselineGoldV2": r["baselineGoldV2"]["metrics"],
         "training": r["train"] and r["train"]["metrics"],
         "adapter": r["adapterEval"] and r["adapterEval"]["metrics"],
     }

@@ -29,3 +29,26 @@ def fact_in(fact: str, text: str, min_token_frac: float = 0.8) -> bool:
     if any(x not in tt and x.rstrip(".,") not in t for x in numeric):
         return False
     return sum(x in tt for x in ft) / len(ft) >= min_token_frac
+
+
+# --- grader v2 canonicalization -------------------------------------------------
+_CONTRACTIONS = [(r"\bcannot\b", "can't"), (r"\bcan not\b", "can't"), (r"\bdo not\b", "don't"),
+                 (r"\bdoes not\b", "doesn't"), (r"\bis not\b", "isn't"), (r"\bare not\b", "aren't"),
+                 (r"\bwill not\b", "won't"), (r"\bdid not\b", "didn't")]
+# "$CAN 150", "CAN$7", "Can$100", "CAD $155", "$7 CAD", "$7 CAN" -> "$150", "$7", ...
+_MONEY = re.compile(r"(?:\$\s?can\b|can\$|cad\s?\$|\$)\s?(\d[\d,]*(?:\.\d+)?)(?:\s?(?:cad|can)\b)?")
+
+
+def canon(s: str) -> str:
+    s = norm(s)
+    for pat, rep in _CONTRACTIONS:
+        s = re.sub(pat, rep, s)
+    s = re.sub(r"\((clb|nclc|teer|noc)\)", r"\1", s)  # "benchmarks (clb) 7" -> "benchmarks clb 7"
+    s = re.sub(r"\b(clb|nclc)\s+level\s+(\d)", r"\1 \2", s)  # "clb level 7" -> "clb 7"
+    return _MONEY.sub(lambda m: "$" + m.group(1), s)
+
+
+def key_in(key: str, text: str) -> bool:
+    """Grader v2: an accepted key matches as an exact span after canonicalization."""
+    k, t = canon(key), canon(text)
+    return re.search(rf"(?<![\w$]){re.escape(k)}(?!\w)", t) is not None

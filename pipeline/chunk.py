@@ -3,7 +3,7 @@
     python -m pipeline.chunk
 
 Every chunk keeps url, title, program and its section heading. Pages cited by any
-gold question are marked split="gold_heldout": they stay in the retrieval index
+gold question (any gold version) are marked split="gold_heldout": they stay in the retrieval index
 (eval and serving) but may never be a source for training targets. The split is
 by page URL, so overlapping chunks of one page can't land on both sides.
 """
@@ -12,7 +12,7 @@ import json
 from collections import Counter
 
 from . import tracking
-from .config import CHUNK_CHARS, CHUNK_OVERLAP, CORPUS_DIR, GOLD_V1
+from .config import CHUNK_CHARS, CHUNK_OVERLAP, CORPUS_DIR, GOLD_FILES
 
 DOCS = CORPUS_DIR / "docs.jsonl"
 CHUNKS = CORPUS_DIR / "chunks.jsonl"
@@ -89,7 +89,8 @@ def chunk_doc(doc: dict) -> list[dict]:
 
 def main():
     docs = [json.loads(l) for l in DOCS.read_text().splitlines() if l.strip()]
-    gold = [json.loads(l) for l in GOLD_V1.read_text().splitlines() if l.strip()]
+    gold_files = [p for p in GOLD_FILES if p.exists()]
+    gold = [json.loads(l) for p in gold_files for l in p.read_text().splitlines() if l.strip()]
     gold_urls = {u for g in gold for u in g["source_urls"]}
     corpus_urls = {d["url"] for d in docs}
     missing = sorted(gold_urls - corpus_urls)
@@ -125,7 +126,7 @@ def main():
                "chunk_chars_p10_p50_p90": [lens[len(lens) // 10], lens[len(lens) // 2], lens[9 * len(lens) // 10]],
                "chunk_len_hist": hist(lens)}
     print(json.dumps({k: v for k, v in metrics.items() if k != "chunk_len_hist"}, indent=1))
-    tracking.record("chunk", inputs=[DOCS, GOLD_V1], outputs=[CHUNKS, SPLIT],
+    tracking.record("chunk", inputs=[DOCS, *gold_files], outputs=[CHUNKS, SPLIT],
                     config={"chunk_chars": CHUNK_CHARS, "overlap": CHUNK_OVERLAP, "split_by": "page_url",
                             "dedupe": "repeated sections within page + identical chunk text across corpus"},
                     metrics=metrics)

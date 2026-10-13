@@ -9,6 +9,8 @@ RUNS_DIR = ROOT / "runs"
 REPORTS_DIR = ROOT / "reports"
 
 GOLD_V1 = EVAL_DIR / "gold_v1.jsonl"
+GOLD_V2 = EVAL_DIR / "gold_v2.jsonl"
+GOLD_FILES = [GOLD_V1, GOLD_V2]  # training holds out the source pages of every gold version
 
 ALLOWED_HOST = "www.canada.ca"
 START_URL = "https://www.canada.ca/en/immigration-refugees-citizenship.html"

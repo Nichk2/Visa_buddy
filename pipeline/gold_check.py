@@ -14,7 +14,7 @@ from pathlib import Path
 
 from .config import PROGRAMS
 from .fetch import fetch
-from .text import fact_in
+from .text import fact_in, key_in
 
 REQUIRED = {"id", "question", "program", "expected_facts", "source_urls", "must_refuse"}
 
@@ -45,9 +45,17 @@ def main(path: str) -> int:
 
     for r in rows:
         texts = [pages.get(u, "") for u in r["source_urls"]]
+        v1_texts = [pages.get(u, "") for u in r["source_urls"] if u not in r.get("extra_source_urls", [])]
         for fct in r["expected_facts"]:
-            if not any(fact_in(fct, t) for t in texts):
+            if not any(fact_in(fct, t) for t in v1_texts):
                 errors.append(f"{r['id']}: fact not on its source pages: {fct!r}")
+        for fct, keys in zip(r["expected_facts"], r.get("fact_keys", [])):
+            if not any(key_in(k, t) for k in keys for t in texts):
+                errors.append(f"{r['id']}: no accepted key for {fct!r} on its source pages")
+        for u in r.get("extra_source_urls", []):  # an extra source must state every fact
+            for fct, keys in zip(r["expected_facts"], r.get("fact_keys", [])):
+                if not any(key_in(k, pages.get(u, "")) for k in keys):
+                    errors.append(f"{r['id']}: extra source {u} lacks {fct!r}")
         if r["must_refuse"] and r.get("refusal_reason") == "not_on_page":
             for m in r.get("answer_markers", []):
                 if any(re.search(m, t, re.I) for t in texts):

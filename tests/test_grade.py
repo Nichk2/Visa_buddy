@@ -52,3 +52,23 @@ def test_number_needs_its_unit():
     assert "10 points" in grade("It gives 10 points.", hits, gold)["unsupported_claims"]
     assert not grade("Stay up to 10 days or 5 years at a time.", hits, gold)["unsupported"]
     assert grade("It costs $10.", hits, gold)["unsupported"]
+
+
+def test_v2_money_and_contractions():
+    from pipeline.text import key_in
+    assert key_in("$7", "It costs $7 CAD.") and key_in("$7", "only costs CAN$7") and key_in("$100", "Fees: $CAN 100")
+    assert key_in("can't sponsor", "you cannot sponsor") and not key_in("$7", "$70")
+    assert not key_in("can change employers", "you can't change employers")
+
+
+def test_v2_uses_keys_and_v1_unchanged():
+    hits = [{"url": U, "title": "t", "text": "It only costs CAN$7."}]
+    gold = {"expected_facts": ["CAN$7"], "fact_keys": [["$7"]], "must_refuse": False}
+    assert grade(f"It is $7 CAD ({U}).", hits, gold)["fact_coverage"] == 1
+    assert grade(f"It is $7 CAD ({U}).", hits, gold, version=1)["fact_coverage"] == 0
+
+
+def test_v2_clb_level_forms():
+    from pipeline.text import key_in
+    assert key_in("CLB 7", "CLB level 7 or higher") and key_in("CLB 7", "Benchmarks (CLB) 7 in English")
+    assert not key_in("CLB 7", "CLB 70")

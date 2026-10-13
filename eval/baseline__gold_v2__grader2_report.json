@@ -1,0 +1,112 @@
+{
+ "tag": "baseline",
+ "model": "meta-llama/Llama-3.1-8B-Instruct",
+ "adapter": null,
+ "quantization": "4bit-nf4",
+ "decoding": "greedy",
+ "top_k": 5,
+ "gold_file": "gold_v2.jsonl",
+ "grader_version": 2,
+ "regraded_from": "baseline_predictions.jsonl",
+ "overall": {
+  "n": 66,
+  "n_answerable": 54,
+  "n_must_refuse": 12,
+  "citation_hit": 0.778,
+  "fact_coverage": 0.585,
+  "refusal_correct": 0.818,
+  "refusal_correct_on_must_refuse": 1.0,
+  "false_refusal_rate": 0.222,
+  "unsupported": 0.019
+ },
+ "per_program": {
+  "express_entry": {
+   "n": 10,
+   "n_answerable": 8,
+   "n_must_refuse": 2,
+   "citation_hit": 0.875,
+   "fact_coverage": 0.688,
+   "refusal_correct": 0.9,
+   "refusal_correct_on_must_refuse": 1.0,
+   "false_refusal_rate": 0.125,
+   "unsupported": 0.0
+  },
+  "study_permit": {
+   "n": 10,
+   "n_answerable": 8,
+   "n_must_refuse": 2,
+   "citation_hit": 0.75,
+   "fact_coverage": 0.625,
+   "refusal_correct": 0.8,
+   "refusal_correct_on_must_refuse": 1.0,
+   "false_refusal_rate": 0.25,
+   "unsupported": 0.125
+  },
+  "work_permit": {
+   "n": 7,
+   "n_answerable": 7,
+   "n_must_refuse": 0,
+   "citation_hit": 1.0,
+   "fact_coverage": 0.762,
+   "refusal_correct": 1.0,
+   "refusal_correct_on_must_refuse": null,
+   "false_refusal_rate": 0.0,
+   "unsupported": 0.0
+  },
+  "pgwp": {
+   "n": 8,
+   "n_answerable": 8,
+   "n_must_refuse": 0,
+   "citation_hit": 0.625,
+   "fact_coverage": 0.438,
+   "refusal_correct": 0.625,
+   "refusal_correct_on_must_refuse": null,
+   "false_refusal_rate": 0.375,
+   "unsupported": 0.0
+  },
+  "visitor": {
+   "n": 8,
+   "n_answerable": 8,
+   "n_must_refuse": 0,
+   "citation_hit": 0.875,
+   "fact_coverage": 0.688,
+   "refusal_correct": 0.875,
+   "refusal_correct_on_must_refuse": null,
+   "false_refusal_rate": 0.125,
+   "unsupported": 0.0
+  },
+  "family": {
+   "n": 8,
+   "n_answerable": 7,
+   "n_must_refuse": 1,
+   "citation_hit": 0.571,
+   "fact_coverage": 0.393,
+   "refusal_correct": 0.75,
+   "refusal_correct_on_must_refuse": 1.0,
+   "false_refusal_rate": 0.286,
+   "unsupported": 0.0
+  },
+  "citizenship": {
+   "n": 9,
+   "n_answerable": 8,
+   "n_must_refuse": 1,
+   "citation_hit": 0.75,
+   "fact_coverage": 0.5,
+   "refusal_correct": 0.667,
+   "refusal_correct_on_must_refuse": 1.0,
+   "false_refusal_rate": 0.375,
+   "unsupported": 0.0
+  },
+  "out_of_scope": {
+   "n": 6,
+   "n_answerable": 0,
+   "n_must_refuse": 6,
+   "citation_hit": null,
+   "fact_coverage": null,
+   "refusal_correct": 1.0,
+   "refusal_correct_on_must_refuse": 1.0,
+   "false_refusal_rate": null,
+   "unsupported": null
+  }
+ }
+}

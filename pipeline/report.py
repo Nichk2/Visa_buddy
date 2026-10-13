@@ -173,6 +173,30 @@ def fig_baseline(brep, run_id):
     return _save(fig, "baseline_overall.png", f"eval/baseline_report.json, ledger run {run_id}")
 
 
+def fig_audit(r1, r2, b1, b2, rid_retr, rid_regr):
+    progs = [p for p in PROGRAMS if p in r1["per_program"]]
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 3.8), gridspec_kw={"width_ratios": [3, 2]})
+    y = list(range(len(progs)))[::-1]
+    h = 0.36
+    GRAY = "#a3a29c"
+    for ax, key, title in ((ax1, "recall@5", "Retrieval recall@5"), (ax2, "fact_coverage", "Baseline fact coverage")):
+        if key == "recall@5":
+            a = [r1["per_program"][p][key] for p in progs]
+            b = [r2["per_program"][p][key] for p in progs]
+        else:
+            a = [b1["per_program"][p][key] or 0 for p in progs]
+            b = [b2["per_program"][p][key] or 0 for p in progs]
+        ax.barh([v + h / 2 for v in y], a, height=h, color=GRAY, label="gold v1 key")
+        ax.barh([v - h / 2 for v in y], b, height=h, color=BLUE, label="gold v2 key")
+        for yi, va, vb in zip(y, a, b):
+            ax.text(vb + 0.01, yi - h / 2, f"{vb:.2f}", va="center", fontsize=7, color=INK)
+        ax.set_xlim(0, 1.15)
+        ax.set_yticks(y, [LABELS[p] for p in progs] if ax is ax1 else [""] * len(progs))
+        _style(ax, title)
+    ax1.legend(frameon=False, fontsize=8, loc="lower right")
+    return _save(fig, "measurement_audit.png", f"ledger runs {rid_retr} (retrieval, gold_v2), {rid_regr} (regrade, gold_v2)")
+
+
 def legacy_audit():
     """Facts about the old run, each read from a file in the repo."""
     old = ROOT / "visa_buddy_data" / "metrics"
@@ -193,7 +217,9 @@ def main():
     gold = tracking.load("gold_freeze")
     crawl = tracking.load("crawl")
     chunk = tracking.load("chunk")
-    retr = tracking.load("eval_retrieval")
+    retr = [r for r in tracking.load("eval_retrieval") if "eval/retrieval_report.json" in r["outputs"]]
+    retr_v2 = [r for r in tracking.load("eval_retrieval") if "eval/retrieval_report_gold_v2.json" in r["outputs"]]
+    regr_v2 = [r for r in tracking.load("regrade:baseline") if r["config"].get("gold") == "gold_v2.jsonl" and r["config"].get("grader_version") == 2]
 
     lines += ["## Gates", "", "| Gate | Status | Evidence |", "|---|---|---|"]
     if gold:
@@ -248,17 +274,33 @@ def main():
             lines += [f"- `{x['id']}` {x['question']}" for x in rep["misses_at_5"]]
             lines.append("")
     if base:
-        brep = json.loads((EVAL_DIR / "baseline_report.json").read_text())
-        figs.append(("Baseline answer quality", fig_baseline(brep, base[-1]["run_id"])))
-        lines += ["## Baseline answers (Llama 3.1 8B, no adapter)", "",
+        brep_v1 = json.loads((EVAL_DIR / "baseline_report.json").read_text())
+        v2_path = EVAL_DIR / "baseline__gold_v2__grader2_report.json"
+        brep = json.loads(v2_path.read_text()) if regr_v2 and v2_path.exists() else brep_v1
+        rid = regr_v2[-1]["run_id"] if regr_v2 else base[-1]["run_id"]
+        figs.append(("Baseline answer quality", fig_baseline(brep, rid)))
+        lines += [f"## Baseline answers (Llama 3.1 8B, no adapter), graded on {brep['gold_file']}", "",
                   "| Program | answerable | citation hit | fact coverage | unsupported | false refusal | must-refuse refused |",
                   "|---|---|---|---|---|---|---|"]
         f = lambda x: "–" if x is None else f"{x:.2f}"
         for p, v in list(brep["per_program"].items()) + [("**overall**", brep["overall"])]:
             lines.append(f"| {LABELS.get(p, p)} | {v['n_answerable']} | {f(v['citation_hit'])} | {f(v['fact_coverage'])} | "
                          f"{f(v['unsupported'])} | {f(v['false_refusal_rate'])} | {f(v['refusal_correct_on_must_refuse'])} |")
-        lines += ["", "Grader v1 matches expected facts close to their wording on the page, so correct paraphrases "
-                  "(\"$7 CAD\" for \"CAN$7\") score as misses. Fact coverage here is a lower bound; see the grader audit.", ""]
+        lines += ["", f"Same answers graded with gold_v1 / grader v1: fact coverage {brep_v1['overall']['fact_coverage']:.3f} "
+                  f"(run `{base[-1]['run_id']}`). See the measurement audit below.", ""]
+    if regr_v2 and retr_v2 and retr:
+        r1 = json.loads((EVAL_DIR / "retrieval_report.json").read_text())
+        r2 = json.loads((EVAL_DIR / "retrieval_report_gold_v2.json").read_text())
+        figs.append(("Measurement audit", fig_audit(r1, r2, brep_v1, brep, retr_v2[-1]["run_id"], regr_v2[-1]["run_id"])))
+        lines += ["## Measurement audit: gold_v1 → gold_v2", "",
+                  "Reading the baseline answers showed grader v1 marking correct paraphrases as misses (\"$7 CAD\" vs "
+                  "\"CAN$7\", \"no more than 90 days after\" vs \"within 90 days\") and crediting loose token matches. "
+                  "gold_v2 keeps every question and fact, adds accepted keys per fact (one rule for all facts) and 40 "
+                  "reviewed alternate source pages. gold_v1 stays frozen; both results are in the ledger.", "",
+                  f"- Baseline fact coverage: {brep_v1['overall']['fact_coverage']:.3f} → {brep['overall']['fact_coverage']:.3f}",
+                  f"- Retrieval recall@5: {r1['answerable']['recall@5']:.3f} → {r2['answerable']['recall@5']:.3f} "
+                  f"(citizenship stays {r2['per_program']['citizenship']['recall@5']:.2f}: a real retrieval gap)",
+                  "- Pages held out of training grew from 28 to 64, since every gold source page is held out.", ""]
     for title, path in figs:
         lines += [f"### {title}", "", f"![{title}]({path})", ""]
 
