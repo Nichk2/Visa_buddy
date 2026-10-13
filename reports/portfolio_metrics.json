@@ -14,7 +14,7 @@
       "retrievalGoldV2": "a6e8c331926c",
       "baselineGoldV2": "f851708cd6b9",
       "train": "fc6ace1a5255",
-      "adapterEval": null
+      "adapterEval": "9b184da36903"
     }
   },
   "headline": {
@@ -452,5 +452,154 @@
       }
     ]
   },
-  "adapter": null
+  "adapter": {
+    "overall": {
+      "metrics_version": 2,
+      "n": 66,
+      "n_answerable": 54,
+      "n_must_refuse": 12,
+      "cite_when_answering": 1.0,
+      "over_refusal_rate": 0.037,
+      "abstained_answer_not_in_context": 4,
+      "answer_in_context_rate": 0.833,
+      "citation_hit": 0.889,
+      "fact_coverage": 0.668,
+      "refusal_correct": 0.894,
+      "refusal_correct_on_must_refuse": 0.917,
+      "false_refusal_rate": 0.111,
+      "unsupported": 0.0
+    },
+    "per_program": {
+      "express_entry": {
+        "metrics_version": 2,
+        "n": 10,
+        "n_answerable": 8,
+        "n_must_refuse": 2,
+        "cite_when_answering": 1.0,
+        "over_refusal_rate": 0.0,
+        "abstained_answer_not_in_context": 1,
+        "answer_in_context_rate": 0.875,
+        "citation_hit": 0.875,
+        "fact_coverage": 0.625,
+        "refusal_correct": 0.9,
+        "refusal_correct_on_must_refuse": 1.0,
+        "false_refusal_rate": 0.125,
+        "unsupported": 0.0
+      },
+      "study_permit": {
+        "metrics_version": 2,
+        "n": 10,
+        "n_answerable": 8,
+        "n_must_refuse": 2,
+        "cite_when_answering": 1.0,
+        "over_refusal_rate": 0.125,
+        "abstained_answer_not_in_context": 0,
+        "answer_in_context_rate": 1.0,
+        "citation_hit": 0.875,
+        "fact_coverage": 0.812,
+        "refusal_correct": 0.9,
+        "refusal_correct_on_must_refuse": 1.0,
+        "false_refusal_rate": 0.125,
+        "unsupported": 0.0
+      },
+      "work_permit": {
+        "metrics_version": 2,
+        "n": 7,
+        "n_answerable": 7,
+        "n_must_refuse": 0,
+        "cite_when_answering": 1.0,
+        "over_refusal_rate": 0.0,
+        "abstained_answer_not_in_context": 0,
+        "answer_in_context_rate": 1.0,
+        "citation_hit": 1.0,
+        "fact_coverage": 0.881,
+        "refusal_correct": 1.0,
+        "refusal_correct_on_must_refuse": null,
+        "false_refusal_rate": 0.0,
+        "unsupported": 0.0
+      },
+      "pgwp": {
+        "metrics_version": 2,
+        "n": 8,
+        "n_answerable": 8,
+        "n_must_refuse": 0,
+        "cite_when_answering": 1.0,
+        "over_refusal_rate": 0.125,
+        "abstained_answer_not_in_context": 1,
+        "answer_in_context_rate": 0.875,
+        "citation_hit": 0.75,
+        "fact_coverage": 0.521,
+        "refusal_correct": 0.75,
+        "refusal_correct_on_must_refuse": null,
+        "false_refusal_rate": 0.25,
+        "unsupported": 0.0
+      },
+      "visitor": {
+        "metrics_version": 2,
+        "n": 8,
+        "n_answerable": 8,
+        "n_must_refuse": 0,
+        "cite_when_answering": 1.0,
+        "over_refusal_rate": 0.0,
+        "abstained_answer_not_in_context": 0,
+        "answer_in_context_rate": 0.875,
+        "citation_hit": 1.0,
+        "fact_coverage": 0.812,
+        "refusal_correct": 1.0,
+        "refusal_correct_on_must_refuse": null,
+        "false_refusal_rate": 0.0,
+        "unsupported": 0.0
+      },
+      "family": {
+        "metrics_version": 2,
+        "n": 8,
+        "n_answerable": 7,
+        "n_must_refuse": 1,
+        "cite_when_answering": 1.0,
+        "over_refusal_rate": 0.0,
+        "abstained_answer_not_in_context": 0,
+        "answer_in_context_rate": 0.571,
+        "citation_hit": 1.0,
+        "fact_coverage": 0.536,
+        "refusal_correct": 1.0,
+        "refusal_correct_on_must_refuse": 1.0,
+        "false_refusal_rate": 0.0,
+        "unsupported": 0.0
+      },
+      "citizenship": {
+        "metrics_version": 2,
+        "n": 9,
+        "n_answerable": 8,
+        "n_must_refuse": 1,
+        "cite_when_answering": 1.0,
+        "over_refusal_rate": 0.0,
+        "abstained_answer_not_in_context": 2,
+        "answer_in_context_rate": 0.625,
+        "citation_hit": 0.75,
+        "fact_coverage": 0.5,
+        "refusal_correct": 0.778,
+        "refusal_correct_on_must_refuse": 1.0,
+        "false_refusal_rate": 0.25,
+        "unsupported": 0.0
+      },
+      "out_of_scope": {
+        "metrics_version": 2,
+        "n": 6,
+        "n_answerable": 0,
+        "n_must_refuse": 6,
+        "cite_when_answering": null,
+        "over_refusal_rate": null,
+        "abstained_answer_not_in_context": 0,
+        "answer_in_context_rate": null,
+        "citation_hit": null,
+        "fact_coverage": null,
+        "refusal_correct": 0.833,
+        "refusal_correct_on_must_refuse": 0.833,
+        "false_refusal_rate": null,
+        "unsupported": null
+      }
+    },
+    "complete": true,
+    "median_latency_s": 8.06
+  }
 }
