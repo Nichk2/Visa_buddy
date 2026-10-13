@@ -50,7 +50,7 @@ def record(stage: str, *, inputs=(), outputs=(), config=None, metrics=None, note
         "stage": stage,
         "timestamp": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "git_commit": _git("rev-parse", "--short", "HEAD"),
-        "git_dirty": bool(_git("status", "--porcelain")),
+        "git_dirty": bool(_git("status", "--porcelain")),  # uncommitted changes: the commit alone may not reproduce it
         "inputs": _files(inputs),
         "outputs": _files(outputs),
         "config": config or {},

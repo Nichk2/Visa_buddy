@@ -1,7 +1,10 @@
 """Text normalization and fact matching shared by gold validation, retrieval eval and grading."""
 import re
 
+# canada.ca uses curly quotes and non-breaking spaces; models answer with straight ones.
+# Without this, "you can't" on the page never matches "you can't" in an answer.
 _SUBS = {"’": "'", "‘": "'", "“": '"', "”": '"', "–": "-", "—": "-", " ": " "}
+# Function words carry no fact; ignoring them keeps token matching on content.
 _STOP = set("a an the of to for in on at and or is are be you your it its if as by with from that this can".split())
 
 
@@ -17,7 +20,9 @@ def tokens(s: str) -> list[str]:
 
 def fact_in(fact: str, text: str, min_token_frac: float = 0.8) -> bool:
     """True if `fact` is supported by `text`: exact normalized substring, or at least
-    min_token_frac of its content tokens present. Numbers and money must match exactly."""
+    min_token_frac of its content tokens present. Numbers and money must match exactly.
+    This is grader v1's matcher (kept to reproduce v1 scores); its token fallback can be too
+    loose ("CLB" and "7" anywhere), which is one reason gold_v2 switched to exact keys."""
     f, t = norm(fact), norm(text)
     if f in t:
         return True

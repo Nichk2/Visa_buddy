@@ -21,7 +21,9 @@ from pathlib import Path
 import modal
 
 BASE = "meta-llama/Llama-3.1-8B-Instruct"
-GPU = "A100"
+GPU = "A100"  # bf16 support and enough memory for 4k-token rows; the full run took 13 minutes
+# Settings from the plan (same r/alpha/targets/lr/batch as v1, so the comparison is about data
+# and method, not knobs). max_len 4096 fits system prompt + 5 sources + answer; no row exceeded it.
 HP = {"lora_r": 8, "lora_alpha": 16, "lora_dropout": 0.05, "target_modules": ["q_proj", "v_proj"],
       "epochs": 2, "learning_rate": 2e-4, "per_device_batch": 1, "grad_accum": 8, "max_len": 4096,
       "warmup_ratio": 0.05, "lr_scheduler": "cosine", "seed": 13, "quantization": "4bit-nf4, double quant",
@@ -32,18 +34,18 @@ image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install("torch")
     .pip_install_from_requirements(str(ROOT / "requirements-gpu.txt"))
-    .add_local_python_source("pipeline")
+    .add_local_python_source("pipeline")  # the job scores validation with the same grading code as eval
 )
 hf_cache = modal.Volume.from_name("visabuddy-hf-cache", create_if_missing=True)
 out_vol = modal.Volume.from_name("visabuddy-train-out", create_if_missing=True)
 app = modal.App("visabuddy-train", image=image)
 
 
-def _digest(obj) -> str:
+def _digest(obj) -> str:  # proves the job trained on exactly the rows this Mac sent
     return hashlib.sha256(json.dumps(obj, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
 
 
-def _messages(row, with_answer):
+def _messages(row, with_answer):  # same system/user messages the chat server builds
     m = [{"role": "system", "content": row["instruction"]}, {"role": "user", "content": row["input"]}]
     return m + [{"role": "assistant", "content": row["output"]}] if with_answer else m
 
@@ -67,7 +69,7 @@ def train(train_rows: list, valid_rows: list, smoke: bool = False) -> dict:
     token = next((os.environ[k] for k in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN", "HUGGINGFACE_TOKEN", "HF_API_TOKEN")
                   if os.environ.get(k)), None)
     assert token, "hf-secret has no HF token under a known key"
-    torch.manual_seed(HP["seed"])
+    torch.manual_seed(HP["seed"])  # reproducible LoRA init and data order
     tok = AutoTokenizer.from_pretrained(BASE, token=token)
     tok.pad_token = tok.pad_token or tok.eos_token
 

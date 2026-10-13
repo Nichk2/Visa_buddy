@@ -25,8 +25,9 @@ class Generator:
             kwargs["device_map"] = "auto"
             kwargs["dtype"] = torch.float16
         self.quantization = "4bit-nf4" if self.cuda else "none-cpu"
+        # With an adapter, load the tokenizer saved next to it: the exact one used in training.
         self.tok = AutoTokenizer.from_pretrained(adapter or model_id, token=token)
-        if self.tok.pad_token_id is None:
+        if self.tok.pad_token_id is None:  # Llama ships without a pad token; generate() needs one
             self.tok.pad_token = self.tok.eos_token
         self.model = AutoModelForCausalLM.from_pretrained(model_id, **kwargs)
         if adapter:
@@ -39,6 +40,8 @@ class Generator:
         enc = self.tok.apply_chat_template(messages, add_generation_prompt=True, return_tensors="pt",
                                            return_dict=True)
         enc = {k: v.to(self.model.device) for k, v in enc.items()}
+        # Greedy (do_sample=False): the same question always gets the same answer, so scores are reproducible.
         out = self.model.generate(**enc, max_new_tokens=max_new_tokens, do_sample=False,
                                   pad_token_id=self.tok.pad_token_id)
+        # decode only the new tokens, not the prompt
         return self.tok.decode(out[0, enc["input_ids"].shape[1]:], skip_special_tokens=True).strip()

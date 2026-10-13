@@ -1,5 +1,6 @@
 """Deterministic grader. No LLM judge: it reads the answer, the retrieved chunks and the
-gold row, and nothing else.
+gold row, and nothing else. (An LLM judge sharing the prompt being tuned would reward its
+own style; a deterministic grader gives the same score on every rerun.)
 
 - citation_hit: the answer contains a URL that is one of the retrieved chunk URLs
 - fact_coverage: share of expected_facts present in the answer AND in the retrieved
@@ -9,6 +10,12 @@ gold row, and nothing else.
 - unsupported: the answer states a checkable claim missing from the chunks. "Checkable"
   means numbers with their unit (money, durations, CLB levels, counts) and URLs. This is
   a proxy: a wrong claim in plain words with no number is not caught.
+- answer_in_context: every expected fact is in the retrieved chunks. Lets the summary tell a
+  wrong refusal (answer was there) from a correct abstention (retrieval missed it).
+
+Grader v1 matched facts by wording close to the page; v2 matches gold_v2's accepted keys
+after canonicalizing money and contractions (v1 scored "$7 CAD" vs "CAN$7" as a miss).
+Both versions stay callable so earlier scores can be reproduced.
 """
 import re
 
@@ -22,7 +29,7 @@ UNITS = r"%|hours?|days?|weeks?|months?|years?|points?|times?|people|members?"
 NUM_RE = re.compile(rf"(?:\$\s?|CAN\$\s?|\bCLB\s|\bNCLC\s)?\d[\d,]*(?:\.\d+)?(?:\s?(?:{UNITS})\b)?", re.I)
 
 
-def _urls(text):
+def _urls(text):  # trailing "." from the end of a sentence isn't part of the URL
     return {u.rstrip(".") for u in URL_RE.findall(text)}
 
 

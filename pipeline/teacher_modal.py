@@ -21,12 +21,14 @@ from pathlib import Path
 import modal
 
 TEACHER = "mistralai/Mistral-Small-3.2-24B-Instruct-2506"
-GPU = "H100"
-VLLM_VERSION = "0.31.0"
+GPU = "H100"  # 80 GB: the 24B model in bf16 (~45 GB) plus KV cache fits on one card
+VLLM_VERSION = "0.31.0"  # the version RouteJudge's teacher job ran on successfully
 
 image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install(f"vllm=={VLLM_VERSION}", "mistral_common")
+    # FlashInfer's sampler JIT-compiles CUDA at startup and needs nvcc, which the slim image lacks.
+    # Decoding is greedy, so the faster sampler brings nothing.
     .env({"VLLM_USE_FLASHINFER_SAMPLER": "0"})
 )
 hf_cache = modal.Volume.from_name("routejudge-hf-cache", create_if_missing=True)  # shared weight cache
@@ -46,8 +48,10 @@ def chat(phase: str, convs: list, max_tokens: int) -> dict:
     import vllm
     from vllm import LLM, SamplingParams
 
+    # Mistral's own tokenizer/config formats: required for this model under vLLM.
     llm = LLM(model=TEACHER, tokenizer_mode="mistral", config_format="mistral",
               load_format="mistral", max_model_len=8192, enable_prefix_caching=True)
+    # temperature 0: the same request always gets the same output, so the data is reproducible
     outs = llm.chat(convs, SamplingParams(temperature=0.0, max_tokens=max_tokens), use_tqdm=False)
     res = {"teacher": TEACHER, "vllm_version": vllm.__version__, "mistral_common_version": mistral_common.__version__,
            "gpu": GPU, "received_sha256": _digest(convs), "outputs": [o.outputs[0].text for o in outs]}

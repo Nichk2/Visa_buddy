@@ -66,11 +66,13 @@ def chunk_doc(doc: dict) -> list[dict]:
             continue  # questionnaire pages repeat the same section once per hidden branch
         seen_sections.add((heading, body))
         pending.append(f"{heading}\n{body}" if heading else body)
+        # Flush once half a chunk has accumulated: short sections ("Fees: $7") get merged with
+        # their neighbours instead of becoming chunks too small to retrieve on their own.
         if sum(len(p) for p in pending) >= CHUNK_CHARS * 0.5:
             blocks.append("\n".join(pending))
             pending = []
     if pending:
-        if blocks and sum(len(p) for p in pending) < CHUNK_CHARS * 0.3:
+        if blocks and sum(len(p) for p in pending) < CHUNK_CHARS * 0.3:  # tiny tail: attach to the previous block
             blocks[-1] += "\n" + "\n".join(pending)
         else:
             blocks.append("\n".join(pending))
@@ -81,6 +83,7 @@ def chunk_doc(doc: dict) -> list[dict]:
             out.append({"heading": heading, "text": piece})
     chunks = []
     for i, c in enumerate(out):
+        # Stable id (same page + position -> same id) so predictions and SFT rows can point at chunks.
         cid = hashlib.sha1(f"{doc['url']}#{i}".encode()).hexdigest()[:12]
         chunks.append({"chunk_id": cid, "url": doc["url"], "title": doc["title"], "program": doc["program"],
                        "section": c["heading"], "position": i, "text": c["text"]})
@@ -94,7 +97,7 @@ def main():
     gold_urls = {u for g in gold for u in g["source_urls"]}
     corpus_urls = {d["url"] for d in docs}
     missing = sorted(gold_urls - corpus_urls)
-    if missing:
+    if missing:  # a gold question whose source page isn't indexed could never be answered: stop
         raise SystemExit(f"gold source pages not in corpus (run pipeline.corpus --add-gold-sources):\n" + "\n".join(missing))
 
     chunks, seen_text, dropped = [], set(), 0
@@ -102,7 +105,9 @@ def main():
         split = "gold_heldout" if d["url"] in gold_urls else "train_eligible"
         for c in chunk_doc(d):
             key = " ".join(c["text"].split())
-            if key in seen_text:  # identical text already indexed (shared page blocks)
+            # Identical text already indexed: shared page blocks and questionnaire pages (one page
+            # once produced 317 chunks) would otherwise fill all 5 retrieval slots with copies.
+            if key in seen_text:
                 dropped += 1
                 continue
             seen_text.add(key)
@@ -114,7 +119,7 @@ def main():
 
     split = {"gold_heldout": sorted(gold_urls),
              "train_eligible": sorted(corpus_urls - gold_urls)}
-    assert not set(split["gold_heldout"]) & set(split["train_eligible"])
+    assert not set(split["gold_heldout"]) & set(split["train_eligible"])  # no page on both sides
     SPLIT.write_text(json.dumps(split, indent=1))
 
     lens = sorted(len(c["text"]) for c in chunks)

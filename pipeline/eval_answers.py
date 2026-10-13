@@ -69,7 +69,7 @@ def main():
     if a.limit:
         gold = gold[:: max(1, len(gold) // a.limit)][: a.limit]  # spread across programs
     pred_path = EVAL_DIR / f"{a.tag}_predictions.jsonl"
-    done = {}
+    done = {}  # answers already saved by an earlier (interrupted) run are reused, not regenerated
     if pred_path.exists():
         done = {json.loads(l)["id"]: json.loads(l) for l in pred_path.read_text().splitlines() if l.strip()}
         print(f"resuming: {len(done)} answers already saved")
@@ -84,10 +84,11 @@ def main():
             t0 = time.time()
             answer = gen(build_messages(g["question"], hits), a.max_new_tokens)
             row = {"id": g["id"], "program": g["program"], "must_refuse": g["must_refuse"], "question": g["question"],
+                   # retrieved URLs are saved so a later regrade can prove it re-ran the same retrieval
                    "answer": answer, "retrieved": [{"url": h["url"], "title": h["title"], "score": h["score"]} for h in hits],
                    "grade": grade(answer, hits, g), "latency_s": round(time.time() - t0, 2)}
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
-            f.flush()
+            f.flush()  # write each answer immediately: a Colab disconnect loses at most one
             done[g["id"]] = row
             gr = row["grade"]
             print(f"[{i}/{len(gold)}] {g['id']} cite={gr['citation_hit']} facts={gr['fact_coverage']} "
@@ -96,7 +97,7 @@ def main():
     rows = [done[g["id"]] for g in gold if g["id"] in done]
     report = {"tag": a.tag, "model": a.model, "adapter": a.adapter, "quantization": gen.quantization,
               "decoding": "greedy", "top_k": TOP_K, "gold_file": Path(a.gold).name,
-              "complete": len(rows) == len(gold), **summarize(rows),
+              "complete": len(rows) == len(gold), **summarize(rows),  # partial runs are flagged, never reported as final
               "median_latency_s": sorted(r["latency_s"] for r in rows)[len(rows) // 2]}
     rep_path = EVAL_DIR / f"{a.tag}_report.json"
     rep_path.write_text(json.dumps(report, indent=1))

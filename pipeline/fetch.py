@@ -18,12 +18,15 @@ _last_fetch = 0.0
 
 
 def normalize_url(url: str) -> str:
+    # Drop #fragments and ?queries so one page has one URL; gold source_urls and the
+    # train/held-out split compare URLs as strings.
     url, _ = urldefrag(url)
     p = urlparse(url)
     return f"https://{p.netloc}{p.path}"
 
 
 def allowed(url: str) -> bool:
+    # Respect robots.txt (canada.ca disallows search pages, menus and some PDFs).
     global _robots_loaded
     if urlparse(url).netloc != ALLOWED_HOST:
         return False
@@ -41,7 +44,7 @@ def program_for(url: str) -> str | None:
     rest = path[len(IRCC_PREFIX):]
     if any(rest.startswith(x) for x in EXCLUDED_PREFIXES):
         return None
-    best = None
+    best = None  # longest matching prefix wins (PGWP pages live under study-canada)
     for prefix, prog in PROGRAM_PREFIXES.items():
         if rest.startswith(prefix) and (best is None or len(prefix) > len(best[0])):
             best = (prefix, prog)
@@ -49,6 +52,9 @@ def program_for(url: str) -> str | None:
 
 
 def _clean_main(soup: BeautifulSoup):
+    # Keep the page body, drop site chrome (language toggle, "page details", feedback form).
+    # Note: ".provisional" is NOT removed: it wraps real content like the spouse-sponsorship
+    # eligibility checklist, which an earlier version of this list silently deleted.
     main = soup.find("main") or soup.body
     for sel in ["nav", "script", "style", "noscript", "#wb-lng", ".pagedetails",
                 ".gc-prtts", "section.gc-prtts", ".pagination", "#wb-dtmd", "form",
@@ -58,6 +64,9 @@ def _clean_main(soup: BeautifulSoup):
     return main
 
 
+# Elements that can hold other text blocks. A list item that contains a nested list is
+# read for its own lead-in text only ("prove you have enough money to pay for"), then its
+# children are read separately; reading the whole thing duplicated or lost text.
 _BLOCKS = ["p", "li", "ul", "ol", "table", "details", "div", "section"]
 
 
@@ -81,7 +90,7 @@ def _main_text(main) -> str:
         if not t:
             continue
         if el.name in ("h1", "h2", "h3", "h4", "h5", "summary"):
-            t = f"\n## {t}"
+            t = f"\n## {t}"  # "## " marks a section; the chunker splits on it and keeps the heading
         elif el.name == "li":
             t = f"- {t}"
         lines.append(t)
@@ -99,17 +108,19 @@ def fetch(url: str) -> dict | None:
     url = normalize_url(url)
     if not allowed(url):
         return None
-    wait = CRAWL_DELAY_S - (time.time() - _last_fetch)
+    wait = CRAWL_DELAY_S - (time.time() - _last_fetch)  # rate limit across all callers
     if wait > 0:
         time.sleep(wait)
     _last_fetch = time.time()
     r = _session.get(url, timeout=30)
     if r.status_code != 200 or "text/html" not in r.headers.get("content-type", ""):
         return {"url": url, "status": r.status_code, "text": "", "links": [], "title": ""}
-    final_url = normalize_url(r.url)
+    final_url = normalize_url(r.url)  # many IRCC links redirect; gold and the index store the final URL
     soup = BeautifulSoup(r.text, "html.parser")
     h1 = soup.find("h1")
     raw_title = soup.title.get_text(" ", strip=True) if soup.title else (h1.get_text(" ", strip=True) if h1 else "")
+    # <title> ("Express Entry: Proof of funds") rather than <h1> ("Express Entry"): it names the
+    # specific page, which is what a citation needs.
     title = " ".join(raw_title.replace(" - Canada.ca", "").split())
     links = []
     for a in soup.find_all("a", href=True):

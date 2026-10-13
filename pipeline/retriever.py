@@ -24,6 +24,8 @@ def embed_text(c: dict) -> str:
 
 def _model():
     from sentence_transformers import SentenceTransformer
+    # CPU on purpose: identical vectors on the Mac, Colab and the server, so a query retrieves
+    # the same top-5 everywhere (the Colab runs are checked against a local re-run).
     return SentenceTransformer(EMBED_MODEL, device="cpu")
 
 
@@ -31,10 +33,10 @@ def build():
     chunks = [json.loads(l) for l in CHUNKS.read_text().splitlines() if l.strip()]
     model = _model()
     emb = model.encode([embed_text(c) for c in chunks], batch_size=64, show_progress_bar=True,
-                       normalize_embeddings=True).astype(np.float32)
+                       normalize_embeddings=True).astype(np.float32)  # unit vectors: dot product = cosine
     INDEX_DIR.mkdir(parents=True, exist_ok=True)
     np.save(EMB, emb)
-    META.write_text(CHUNKS.read_text())
+    META.write_text(CHUNKS.read_text())  # metadata saved next to the vectors so row i always matches vector i
     INFO.write_text(json.dumps({"embed_model": EMBED_MODEL, "chunks": len(chunks), "dim": int(emb.shape[1]),
                                 "normalized": True, "similarity": "cosine (dot product)"}, indent=1))
     tracking.record("index", inputs=[CHUNKS], outputs=[EMB, META, INFO],
@@ -53,7 +55,7 @@ class Retriever:
         """Top-k chunks by cosine similarity. `allow(chunk) -> bool` restricts the pool
         (dataset building uses it to draw contexts from training pages only)."""
         q = self.model.encode([query], normalize_embeddings=True)[0].astype(np.float32)
-        scores = self.emb @ q
+        scores = self.emb @ q  # brute force over ~3.6k chunks is milliseconds; no vector DB needed
         out = []
         for i in np.argsort(-scores):
             if allow is None or allow(self.chunks[i]):

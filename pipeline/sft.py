@@ -29,13 +29,13 @@ from .text import norm, tokens
 
 SFT = DATA / "sft"
 WORK = SFT / "work"
-SEED = 13
-PER_PROGRAM = 80          # source chunks asked about per program
+SEED = 13                 # fixed so the same chunks, pages and samples are chosen on every rebuild
+PER_PROGRAM = 80          # source chunks asked about per program (balanced, so no program dominates)
 VALID_PAGE_FRAC = 0.12    # share of source pages held out for validation
-MIN_CHUNK_CHARS = 400
+MIN_CHUNK_CHARS = 400     # shorter chunks are mostly headers/link lists with nothing to ask about
 GOLD_SIM_MAX = 0.85       # a training question this close to any gold question is dropped
 DUP_SIM_MAX = 0.95        # near-duplicate training questions are dropped
-GROUNDED_MIN = 0.85       # share of answer content tokens that must appear in the context
+GROUNDED_MIN = 0.85       # share of answer content tokens that must appear in the context (blocks invented rules)
 REFUSAL_SHARE = 0.27      # target share of refusal rows (data card requires >= 0.20)
 
 # Thresholds for the teacher on gold_v2 (grader v2), fixed before the run. The teacher must
@@ -108,6 +108,7 @@ def select():
     rng = random.Random(SEED)
     pool = defaultdict(list)
     for c in ret.chunks:
+        # train_eligible only: pages any eval file cites never become a source for training
         if c["split"] == "train_eligible" and len(c["text"]) >= MIN_CHUNK_CHARS and c["program"] in PROGRAMS:
             pool[c["program"]].append(c)
     chosen = []
@@ -116,6 +117,8 @@ def select():
             chosen += rng.sample(pool[p], min(PER_PROGRAM, len(pool[p])))
     pages = sorted({c["url"] for c in chosen})
     rng.shuffle(pages)
+    # Validation is split by page, not by question: two questions from one page on both sides
+    # would let the checkpoint score look better than it is.
     valid_pages = set(pages[: round(len(pages) * VALID_PAGE_FRAC)])
     reqs = []
     for c in chosen:
@@ -178,11 +181,12 @@ def requests_():
                 drops["oos_unparsed"] += 1
             for j, q in enumerate(qs[:6]):
                 if isinstance(q, str) and q.strip():
-                    h = int(re.sub(r"\D", "", o["req_id"]) or 0) * 10 + j
+                    h = int(re.sub(r"\D", "", o["req_id"]) or 0) * 10 + j  # deterministic ~1-in-8 valid split
                     cands.append((q.strip(), {"kind": "oos", "topic": r["topic"], "program": "out_of_scope",
                                               "split": "valid" if h % 8 == 0 else "train"}))
 
-    # leakage + near-duplicate filters
+    # Leakage + near-duplicate filters: a training question that paraphrases an eval question
+    # would let the model memorize the test; near-duplicates would over-weight one fact.
     E = emb([q for q, _ in cands])
     keep, kept_emb = [], []
     for (q, meta), e in zip(cands, E):
@@ -198,6 +202,8 @@ def requests_():
         keep.append((q, meta))
         kept_emb.append(e)
 
+    # Which chunks a training context may draw from. Always training pages only; train rows also
+    # skip validation pages so the two sets never share a page.
     def allow_for(split, *, program=None, not_program=None, not_url=None):
         def f(c):
             if c["split"] != "train_eligible":
@@ -223,10 +229,14 @@ def requests_():
         src = chunk_by_id[meta["chunk_id"]]
         hits = ret.search(q, TOP_K, allow=allow_for(meta["split"]))
         if src["chunk_id"] not in {h["chunk_id"] for h in hits}:
+            # The server would never see this chunk for this question, so an answer row would teach
+            # the model to answer from text it didn't receive. Skipped, not converted.
             drops["source_chunk_not_retrieved"] += 1
         else:
             reqs.append(_answer_req(f"ans:{n}", "answer", base, hits))
-        # refusal candidates built from the same question with the answer's page removed
+        # Refusal candidates: the same question with the answer's page taken out of reach, either
+        # by searching other programs only or the same program minus the source page. Kept later
+        # only if the teacher also refuses (other pages often still contain the answer).
         reqs.append(_answer_req(f"wrongprog:{n}", "refusal_wrong_program", base,
                                 ret.search(q, TOP_K, allow=allow_for(meta["split"], not_program=src["program"]))))
         reqs.append(_answer_req(f"removed:{n}", "refusal_removed", base,
@@ -293,6 +303,8 @@ _SRC_RE = re.compile(r"\(Source:[^)]*\)|https?://\S+")
 
 
 def grounded_share(answer, ctx_text):
+    # Share of the answer's words that appear in its sources (citation stripped). A teacher answer
+    # that adds rules or advice from its own knowledge scores low and is dropped.
     body = _SRC_RE.sub(" ", answer)
     toks = tokens(body)
     ctx = set(tokens(ctx_text))
@@ -314,8 +326,11 @@ def build():
         out = outs[r["req_id"]]
         ctx_text = "\n".join(c["text"] for c in r["context"])
         ctx_urls = {c["url"] for c in r["context"]}
+        # Hard stop, not a filter: an eval page in a training input would mean the split is broken.
         assert not ctx_urls & gold_urls, f"{r['req_id']}: gold page in a training context"
         teacher_refused = norm(REFUSAL) in norm(out)
+        # instruction/input are exactly the serving system prompt and user message, so the model is
+        # trained on what /chat will send it (v1 trained with context but served without it).
         row = {"id": r["req_id"], "kind": r["kind"], "split": r["split"], "program": r["program"],
                "source_url": r.get("url"), "question": r["question"], "context_urls": sorted(ctx_urls),
                "instruction": SYSTEM, "input": r["messages"][1]["content"]}
@@ -329,18 +344,22 @@ def build():
                 drops["answer:number_not_in_context"] += 1
             elif grounded_share(out, ctx_text) < GROUNDED_MIN:
                 drops["answer:not_grounded"] += 1
-            elif len(out) > 1500:
+            elif len(out) > 1500:  # long answers were mostly lists copied wholesale; short and cited is the target
                 drops["answer:too_long"] += 1
             else:
                 answers.append({**row, "output": out})
         else:
-            # refusal targets: the teacher must also have refused this exact context
+            # Refusal targets: the teacher must also have refused this exact context. If it answered,
+            # the context still held the answer and a refusal label would teach over-refusal,
+            # which is the baseline's main weakness.
             if not teacher_refused:
                 drops[f"{r['kind']}:teacher_answered"] += 1
             else:
                 refusals.append({**row, "output": REFUSAL_OUTPUT})
 
-    # balance: refusals ~REFUSAL_SHARE of the final set, mixing the three kinds
+    # Balance: refusals ~REFUSAL_SHARE of the final set, taken round-robin from the three kinds so
+    # no single refusal pattern dominates. Too many refusals would undo the over-refusal fix;
+    # too few (v1 had none) teaches the model to always produce a confident answer.
     rng = random.Random(SEED)
     want = round(len(answers) * REFUSAL_SHARE / (1 - REFUSAL_SHARE))
     by_kind = defaultdict(list)
