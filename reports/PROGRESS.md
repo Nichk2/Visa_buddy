@@ -41,6 +41,14 @@ Misses at k=5:
 - `ci05` Do I need to have filed income taxes to apply for citizenship?
 - `ci06` What topics does the citizenship test cover?
 
+### v1 → v2: coverage
+
+![v1 → v2: coverage](figures/v1_v2_coverage.png)
+
+### v1 → v2: v1's own test queries
+
+![v1 → v2: v1's own test queries](figures/v1_v2_old_queries.png)
+
 ### Corpus
 
 ![Corpus](figures/corpus_chunks_by_program.png)
@@ -63,6 +71,14 @@ Misses at k=5:
 - `rag_evaluation_results_direct.csv` marks all 10 queries successful because success meant "a chunk came back".
 - `training_metrics_*.png` plot `2.5·exp(-0.01·step)` + noise from `simulate_training_metrics()`, not a training log.
 
+- The v1 crawler saved **10 pages**: {'landing/other': 1, 'express_entry': 9}. No study permit, PGWP, work permit, family or citizenship page was in the index.
+- v1 fine-tuned on **50 template rows**; 16 had retrieval similarity ≥ 0.5 (lowest 0.374). No held-out set.
+- On v1's own test queries, the top chunk was from the right program **1/9** times (v2: **8/9**). Source: ledger run `13f38c36e422`.
+
+![v1 loss curve, simulated](../visa_buddy_data/metrics/training_metrics_20251125_145813.png)
+
+*The v1 loss curve above is the original file, kept unchanged as evidence. It was drawn from a formula.*
+
 ## Run ledger
 
 | run | stage | time (UTC) | commit |
@@ -77,3 +93,5 @@ Misses at k=5:
 | `2e8249737c2c` | index | 2026-10-11T20:36:20+00:00 | `616f343` (dirty) |
 | `9f131097aa49` | eval_retrieval | 2026-10-11T20:36:34+00:00 | `616f343` (dirty) |
 | `933a39ed6a15` | eval_retrieval | 2026-10-11T20:37:05+00:00 | `616f343` (dirty) |
+| `13f38c36e422` | legacy_audit | 2026-10-13T13:03:45+00:00 | `4e27670` (dirty) |
+| `8dc9a2d83c16` | eval_answers:smoke | 2026-10-13T13:18:28+00:00 | `4e27670` (dirty) |

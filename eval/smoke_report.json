@@ -1,0 +1,90 @@
+{
+ "tag": "smoke",
+ "model": "Qwen/Qwen2.5-0.5B-Instruct",
+ "adapter": null,
+ "quantization": "none-cpu",
+ "decoding": "greedy",
+ "top_k": 5,
+ "gold_file": "gold_v1.jsonl",
+ "complete": true,
+ "overall": {
+  "n": 6,
+  "n_answerable": 5,
+  "n_must_refuse": 1,
+  "citation_hit": 0.0,
+  "fact_coverage": 0.667,
+  "refusal_correct": 0.833,
+  "refusal_correct_on_must_refuse": 0.0,
+  "false_refusal_rate": 0.0,
+  "unsupported": 0.0
+ },
+ "per_program": {
+  "express_entry": {
+   "n": 1,
+   "n_answerable": 1,
+   "n_must_refuse": 0,
+   "citation_hit": 0.0,
+   "fact_coverage": 1.0,
+   "refusal_correct": 1.0,
+   "refusal_correct_on_must_refuse": null,
+   "false_refusal_rate": 0.0,
+   "unsupported": 0.0
+  },
+  "study_permit": {
+   "n": 1,
+   "n_answerable": 1,
+   "n_must_refuse": 0,
+   "citation_hit": 0.0,
+   "fact_coverage": 1.0,
+   "refusal_correct": 1.0,
+   "refusal_correct_on_must_refuse": null,
+   "false_refusal_rate": 0.0,
+   "unsupported": 0.0
+  },
+  "pgwp": {
+   "n": 1,
+   "n_answerable": 1,
+   "n_must_refuse": 0,
+   "citation_hit": 0.0,
+   "fact_coverage": 0.0,
+   "refusal_correct": 1.0,
+   "refusal_correct_on_must_refuse": null,
+   "false_refusal_rate": 0.0,
+   "unsupported": 0.0
+  },
+  "visitor": {
+   "n": 1,
+   "n_answerable": 1,
+   "n_must_refuse": 0,
+   "citation_hit": 0.0,
+   "fact_coverage": 1.0,
+   "refusal_correct": 1.0,
+   "refusal_correct_on_must_refuse": null,
+   "false_refusal_rate": 0.0,
+   "unsupported": 0.0
+  },
+  "family": {
+   "n": 1,
+   "n_answerable": 1,
+   "n_must_refuse": 0,
+   "citation_hit": 0.0,
+   "fact_coverage": 0.333,
+   "refusal_correct": 1.0,
+   "refusal_correct_on_must_refuse": null,
+   "false_refusal_rate": 0.0,
+   "unsupported": 0.0
+  },
+  "out_of_scope": {
+   "n": 1,
+   "n_answerable": 0,
+   "n_must_refuse": 1,
+   "citation_hit": null,
+   "fact_coverage": null,
+   "refusal_correct": 0.0,
+   "refusal_correct_on_must_refuse": 0.0,
+   "false_refusal_rate": null,
+   "unsupported": null
+  }
+ },
+ "median_latency_s": 82.18
+}

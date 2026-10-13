@@ -114,6 +114,45 @@ def fig_corpus(chunk_run):
     return _save(fig, "corpus_chunks_by_program.png", f"ledger run {chunk_run['run_id']} (stage chunk)")
 
 
+def fig_coverage(audit_run, crawl_run):
+    v1 = audit_run["metrics"]["v1_pages_by_program"]
+    v2 = crawl_run["metrics"]["docs_per_program"]
+    progs = [p for p in PROGRAMS if p in LABELS]
+    fig, ax = plt.subplots(figsize=(7, 3.8))
+    y = list(range(len(progs)))[::-1]
+    h = 0.36
+    ax.barh([v + h / 2 for v in y], [v1.get(p, 0) for p in progs], height=h, color=ORANGE, label="v1 crawl")
+    ax.barh([v - h / 2 for v in y], [v2.get(p, 0) for p in progs], height=h, color=BLUE, label="v2 crawl")
+    for yi, p in zip(y, progs):
+        ax.text(v1.get(p, 0) + 1.5, yi + h / 2, str(v1.get(p, 0)), va="center", fontsize=8, color=INK)
+        ax.text(v2.get(p, 0) + 1.5, yi - h / 2, str(v2.get(p, 0)), va="center", fontsize=8, color=INK)
+    ax.set_yticks(y, [LABELS[p] for p in progs])
+    ax.legend(frameon=False, fontsize=8, loc="lower right")
+    _style(ax, "Official pages indexed per program",
+           f"v1: {audit_run['metrics']['v1_pages_crawled']} pages, all Express Entry or the landing page. "
+           f"v2: {crawl_run['metrics']['docs']} pages across 7 programs")
+    return _save(fig, "v1_v2_coverage.png", f"ledger runs {audit_run['run_id']} (legacy_audit), {crawl_run['run_id']} (crawl)")
+
+
+def fig_old_queries(audit_run):
+    m = audit_run["metrics"]
+    n = m["compared"]
+    fig, ax = plt.subplots(figsize=(8, 2.4))
+    rows = [("v1 reported \"successful\"", m["v1_marked_successful"] / m["old_queries"], ORANGE,
+             f"{m['v1_marked_successful']}/{m['old_queries']} (any chunk = success)"),
+            ("v1 top result in the right program", m["v1_top1_right_program"] / n, ORANGE, f"{m['v1_top1_right_program']}/{n}"),
+            ("v2 top result in the right program", m["v2_top1_right_program"] / n, BLUE, f"{m['v2_top1_right_program']}/{n}")]
+    y = list(range(len(rows)))[::-1]
+    for yi, (_, v, c, lab) in zip(y, rows):
+        ax.barh(yi, v, color=c, height=0.55)
+        ax.text(v + 0.01, yi, lab, va="center", fontsize=8, color=INK)
+    ax.set_yticks(y, [r[0] for r in rows])
+    ax.set_xlim(0, 1.6)
+    ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0], ["0%", "25%", "50%", "75%", "100%"])
+    _style(ax, "v1's own 10 test queries, re-checked", "same questions; v1 counted every query a success")
+    return _save(fig, "v1_v2_old_queries.png", f"eval/legacy_audit.json, ledger run {audit_run['run_id']}")
+
+
 def legacy_audit():
     """Facts about the old run, each read from a file in the repo."""
     old = ROOT / "visa_buddy_data" / "metrics"
@@ -155,6 +194,10 @@ def main():
               "| QLoRA training | not started | |", ""]
 
     figs = []
+    audit = tracking.load("legacy_audit")
+    if audit and crawl:
+        figs.append(("v1 → v2: coverage", fig_coverage(audit[-1], crawl[-1])))
+        figs.append(("v1 → v2: v1's own test queries", fig_old_queries(audit[-1])))
     if chunk:
         figs.append(("Corpus", fig_corpus(chunk[-1])))
     if retr:
@@ -188,6 +231,17 @@ def main():
               "success meant \"a chunk came back\".",
               "- `training_metrics_*.png` plot `2.5·exp(-0.01·step)` + noise from `simulate_training_metrics()`, not a training log.",
               ""]
+    if audit:
+        f = audit[-1]["metrics"]
+        lines += [f"- The v1 crawler saved **{f['v1_pages_crawled']} pages**: {f['v1_pages_by_program']}. "
+                  "No study permit, PGWP, work permit, family or citizenship page was in the index.",
+                  f"- v1 fine-tuned on **{f['v1_sft_rows']} template rows**; {f['v1_sft_rows_similarity_ge_0_5']} had "
+                  f"retrieval similarity ≥ 0.5 (lowest {f['v1_sft_min_similarity']}). No held-out set.",
+                  f"- On v1's own test queries, the top chunk was from the right program "
+                  f"**{f['v1_top1_right_program']}/{f['compared']}** times (v2: **{f['v2_top1_right_program']}/{f['compared']}**). "
+                  f"Source: ledger run `{audit[-1]['run_id']}`.",
+                  "", "![v1 loss curve, simulated](../visa_buddy_data/metrics/training_metrics_20251125_145813.png)",
+                  "", "*The v1 loss curve above is the original file, kept unchanged as evidence. It was drawn from a formula.*", ""]
     lines += ["## Run ledger", "", "| run | stage | time (UTC) | commit |", "|---|---|---|---|"]
     for r in tracking.load():
         lines.append(f"| `{r['run_id']}` | {r['stage']} | {r['timestamp']} | `{r['git_commit']}`{' (dirty)' if r['git_dirty'] else ''} |")

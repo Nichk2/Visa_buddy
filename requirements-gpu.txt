@@ -1,0 +1,14 @@
+# Shared by the Colab eval/serving notebook and the Modal training image.
+# Keep these identical in both places: an adapter trained with one set and loaded
+# with another can fail to load or behave differently. torch comes from the runtime.
+transformers==5.19.0
+peft==0.21.2
+accelerate==1.15.0
+bitsandbytes==0.50.2
+sentence-transformers==6.1.0
+numpy>=2.0
+requests
+beautifulsoup4
+matplotlib
+fastapi
+uvicorn

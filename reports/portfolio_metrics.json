@@ -1,0 +1,195 @@
+{
+  "provenance": {
+    "evalSet": "eval/gold_v1.jsonl",
+    "evalSha256": "cb290965f9fe486c52f13c08089a4287de411fc36034de0e502f24fcca17c074",
+    "runs": {
+      "gold": "c1b04c584eef",
+      "legacyAudit": "13f38c36e422",
+      "crawl": "687fd6d758fd",
+      "chunk": "5b1ce79af2cb",
+      "index": "2e8249737c2c",
+      "retrieval": "933a39ed6a15",
+      "baseline": null,
+      "train": null,
+      "adapterEval": null
+    }
+  },
+  "headline": {
+    "claimedScore": "8/10",
+    "claimedTestQueries": 0,
+    "claimedRetrievalSuccess": 100.0,
+    "measuredRecallAt5": 81.5
+  },
+  "v1": {
+    "pagesCrawled": 10,
+    "pagesByProgram": {
+      "landing/other": 1,
+      "express_entry": 9
+    },
+    "sftRows": 50,
+    "sftRowsSimilarityGe05": 16,
+    "lossCurveFormula": "2.5*exp(-0.01*step) + 0.1*random()",
+    "lossCurvePlottedSteps": 500,
+    "oldQueriesTop1RightProgram": 1,
+    "oldQueriesCompared": 9
+  },
+  "v2": {
+    "goldQuestions": 66,
+    "goldAnswerable": 54,
+    "goldMustRefuse": 12,
+    "pagesCrawled": 495,
+    "pagesByProgram": {
+      "express_entry": 22,
+      "study_permit": 114,
+      "pgwp": 17,
+      "work_permit": 130,
+      "visitor": 96,
+      "family": 28,
+      "citizenship": 88
+    },
+    "chunks": 3566,
+    "pagesHeldOut": 28,
+    "oldQueriesTop1RightProgram": 8,
+    "retrieval": {
+      "overall": {
+        "recall@1": 57.4,
+        "recall@3": 75.9,
+        "recall@5": 81.5,
+        "recall@10": 90.7,
+        "fact_coverage@5": 86.1
+      },
+      "perProgram": {
+        "express_entry": {
+          "n": 8,
+          "recallAt5": 75.0,
+          "factCoverageAt5": 87.5
+        },
+        "study_permit": {
+          "n": 8,
+          "recallAt5": 100.0,
+          "factCoverageAt5": 100.0
+        },
+        "work_permit": {
+          "n": 7,
+          "recallAt5": 100.0,
+          "factCoverageAt5": 100.0
+        },
+        "pgwp": {
+          "n": 8,
+          "recallAt5": 100.0,
+          "factCoverageAt5": 93.8
+        },
+        "visitor": {
+          "n": 8,
+          "recallAt5": 75.0,
+          "factCoverageAt5": 93.8
+        },
+        "family": {
+          "n": 7,
+          "recallAt5": 57.1,
+          "factCoverageAt5": 64.3
+        },
+        "citizenship": {
+          "n": 8,
+          "recallAt5": 62.5,
+          "factCoverageAt5": 62.5
+        }
+      }
+    }
+  },
+  "oldQueries": [
+    {
+      "id": "Q1",
+      "query": "What is Express Entry and how does it work?",
+      "want": "express_entry",
+      "v1_top_preview": "Create your profile and enter the pool",
+      "v1_top_program": "express_entry",
+      "v2_top_title": "How the system works",
+      "v2_top_program": "work_permit"
+    },
+    {
+      "id": "Q2",
+      "query": "How to apply for a study permit in Canada?",
+      "want": "study_permit",
+      "v1_top_preview": "recalculated score is less than the lowest score in your round of invitations, y",
+      "v1_top_program": "express_entry",
+      "v2_top_title": "Study permit: Who can apply",
+      "v2_top_program": "study_permit"
+    },
+    {
+      "id": "Q3",
+      "query": "What documents are needed for a work visa?",
+      "want": "work_permit",
+      "v1_top_preview": "Apply for permanent residence",
+      "v1_top_program": "express_entry",
+      "v2_top_title": "Work permit: Forms and document requirements for applications outside Canada",
+      "v2_top_program": "work_permit"
+    },
+    {
+      "id": "Q4",
+      "query": "What is PGWP eligibility criteria?",
+      "want": "pgwp",
+      "v1_top_preview": "Check your score",
+      "v1_top_program": "express_entry",
+      "v2_top_title": "Post-graduation work permit: Field of study - Currently eligible CIP codes",
+      "v2_top_program": "pgwp"
+    },
+    {
+      "id": "Q5",
+      "query": "How long does visa processing take?",
+      "want": null,
+      "v1_top_preview": "Apply for permanent residence",
+      "v1_top_program": "express_entry",
+      "v2_top_title": "Transit visa: After you apply",
+      "v2_top_program": "visitor"
+    },
+    {
+      "id": "Q6",
+      "query": "What are the requirements for family sponsorship?",
+      "want": "family",
+      "v1_top_preview": "recalculated score is less than the lowest score in your round of invitations, y",
+      "v1_top_program": "express_entry",
+      "v2_top_title": "Income requirements for the sponsor",
+      "v2_top_program": "family"
+    },
+    {
+      "id": "Q7",
+      "query": "How much funds needed for student visa?",
+      "want": "study_permit",
+      "v1_top_preview": "Apply for permanent residence",
+      "v1_top_program": "express_entry",
+      "v2_top_title": "Francophone Minority Communities Student Pilot : Participating designated learning institutions and financial requirements",
+      "v2_top_program": "study_permit"
+    },
+    {
+      "id": "Q8",
+      "query": "What is the difference between PR and citizenship?",
+      "want": "citizenship",
+      "v1_top_preview": "Check your score",
+      "v1_top_program": "express_entry",
+      "v2_top_title": "Understanding the status of your citizenship application",
+      "v2_top_program": "citizenship"
+    },
+    {
+      "id": "Q9",
+      "query": "Can I work while on a study permit?",
+      "want": "study_permit",
+      "v1_top_preview": "Create your profile and enter the pool",
+      "v1_top_program": "express_entry",
+      "v2_top_title": "Study permit: Who can study without a permit",
+      "v2_top_program": "study_permit"
+    },
+    {
+      "id": "Q10",
+      "query": "How to extend visitor visa in Canada?",
+      "want": "visitor",
+      "v1_top_preview": "If we approve your application",
+      "v1_top_program": "express_entry",
+      "v2_top_title": "Visitor Visa: Prepare for your arrival",
+      "v2_top_program": "visitor"
+    }
+  ],
+  "baseline": null,
+  "training": null,
+  "adapter": null
+}
