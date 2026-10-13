@@ -10,7 +10,8 @@ REPORTS_DIR = ROOT / "reports"
 
 GOLD_V1 = EVAL_DIR / "gold_v1.jsonl"
 GOLD_V2 = EVAL_DIR / "gold_v2.jsonl"
-GOLD_FILES = [GOLD_V1, GOLD_V2]  # training holds out the source pages of every gold version
+SAFETY_V1 = EVAL_DIR / "safety_v1.jsonl"
+GOLD_FILES = [GOLD_V1, GOLD_V2, SAFETY_V1]  # training holds out the source pages (and questions) of every eval file
 
 ALLOWED_HOST = "www.canada.ca"
 START_URL = "https://www.canada.ca/en/immigration-refugees-citizenship.html"

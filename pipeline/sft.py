@@ -21,7 +21,7 @@ from collections import Counter, defaultdict
 import numpy as np
 
 from . import tracking
-from .config import DATA, EVAL_DIR, GOLD_V2, PROGRAMS, TOP_K
+from .config import DATA, EVAL_DIR, GOLD_FILES, GOLD_V2, PROGRAMS, TOP_K
 from .grade import grade
 from .prompt import REFUSAL, REFUSAL_OUTPUT, SYSTEM, build_messages, format_context
 from .retriever import Retriever
@@ -97,6 +97,11 @@ def _gold():
     return _jsonl(GOLD_V2)
 
 
+def _eval_questions():
+    """Every eval row (all gold versions and the safety set): used for leakage checks."""
+    return [r for p in GOLD_FILES if p.exists() for r in _jsonl(p)]
+
+
 # ---------------------------------------------------------------- select
 def select():
     ret = Retriever()
@@ -151,7 +156,7 @@ def requests_():
     valid_pages = set(json.loads((WORK / "valid_pages.json").read_text()))
     chunk_by_id = {c["chunk_id"]: c for c in ret.chunks}
     gold = _gold()
-    gold_q = [g["question"] for g in gold]
+    gold_q = sorted({g["question"] for g in _eval_questions()})
     gold_norm = {norm(q) for q in gold_q}
     gold_emb = emb(gold_q)
 
@@ -300,7 +305,7 @@ def build():
         sys.exit("teacher gate failed: its rows are not used (see eval/teacher_gate_report.json)")
     reqs = _jsonl(WORK / "answers_requests.jsonl")
     outs = {o["req_id"]: o["raw"].strip() for o in _jsonl(WORK / "answers_teacher.jsonl")}
-    gold_urls = {u for g in _gold() for u in g["source_urls"]}
+    gold_urls = {u for g in _eval_questions() for u in g["source_urls"]}
     drops = Counter()
     answers, refusals = [], []
     for r in reqs:
@@ -364,7 +369,7 @@ def build():
 
 
 def data_card(train, valid, drops, refusal_pool):
-    gold = _gold()
+    gold = _eval_questions()
     gold_urls = {u for g in gold for u in g["source_urls"]}
     gold_qs = {norm(g["question"]) for g in gold}
     allrows = train + valid
