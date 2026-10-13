@@ -222,11 +222,14 @@ def main():
     regr_v2 = [r for r in tracking.load("regrade:baseline") if r["config"].get("gold") == "gold_v2.jsonl" and r["config"].get("grader_version") == 2]
 
     lines += ["## Gates", "", "| Gate | Status | Evidence |", "|---|---|---|"]
-    if gold:
-        g = gold[-1]
-        sha = next(iter(g["outputs"].values()))
-        lines.append(f"| Gold set frozen before indexing | done | {g['metrics']['rows']} questions "
+    for g in [x for x in gold if x["config"].get("version") == "v1"][-1:]:
+        sha = g["outputs"]["eval/gold_v1.jsonl"]
+        lines.append(f"| gold_v1 frozen before indexing | done | {g['metrics']['rows']} questions "
                      f"({g['metrics']['must_refuse']} must-refuse), sha256 `{sha[:12]}…`, run `{g['run_id']}` |")
+    for g in [x for x in gold if x["config"].get("version") == "v2"][-1:]:
+        sha = g["outputs"]["eval/gold_v2.jsonl"]
+        lines.append(f"| gold_v2 answer key (same questions) | done | +{g['metrics']['extra_source_urls']} reviewed source pages, "
+                     f"sha256 `{sha[:12]}…`, run `{g['run_id']}` |")
     if chunk:
         c = chunk[-1]
         lines.append(f"| Corpus split by page URL | done | {c['metrics']['pages_per_split']}, run `{c['run_id']}` |")
@@ -242,9 +245,19 @@ def main():
                      f"complete={b['metrics']['complete']}, run `{b['run_id']}` |")
     else:
         lines.append("| Baseline (no adapter) scored | not started | |")
-    lines += [
-              "| SFT data card checks | not started | |",
-              "| QLoRA training | not started | |", ""]
+    gates = tracking.load("teacher_gate")
+    sftb = tracking.load("sft_build")
+    if gates:
+        g = gates[-1]
+        lines.append(f"| Teacher quality gate | {'pass' if g['metrics']['passed'] else 'FAIL'} | "
+                     f"{len(gates)} runs; latest `{g['run_id']}` (see Teacher gate) |")
+    if sftb:
+        m = sftb[-1]["metrics"]
+        lines.append(f"| SFT data card checks | {'pass' if m['all_checks_pass'] else 'FAIL'} | {m['train']} train / {m['valid']} valid, "
+                     f"refusal share {m['refusal_share_train']}, run `{sftb[-1]['run_id']}` |")
+    else:
+        lines.append("| SFT data card checks | not started | |")
+    lines += ["| QLoRA training | not started | |", ""]
 
     figs = []
     audit = tracking.load("legacy_audit")
@@ -301,6 +314,21 @@ def main():
                   f"- Retrieval recall@5: {r1['answerable']['recall@5']:.3f} → {r2['answerable']['recall@5']:.3f} "
                   f"(citizenship stays {r2['per_program']['citizenship']['recall@5']:.2f}: a real retrieval gap)",
                   "- Pages held out of training grew from 28 to 64, since every gold source page is held out.", ""]
+    if gates:
+        lines += ["## Teacher gate (Mistral Small 3.2 24B on gold_v2)", "",
+                  "| run | metric definitions | cite | refused although answer in sources | must-refuse refused | unsupported | fact coverage | passed |",
+                  "|---|---|---|---|---|---|---|---|"]
+        for g in gates:
+            o = g["metrics"]["overall"]
+            v2 = g["config"].get("metrics_version") == 2
+            cite = o["cite_when_answering"] if v2 else o["citation_hit"]
+            refl = o["over_refusal_rate"] if v2 else o["false_refusal_rate"]
+            lines.append(f"| `{g['run_id']}` | {'v2 (corrected)' if v2 else 'v1'} | {cite:.3f} | {refl:.3f} | "
+                         f"{o['refusal_correct_on_must_refuse']:.2f} | {o['unsupported']:.3f} | {o['fact_coverage']:.3f} | "
+                         f"{'yes' if g['metrics']['passed'] else 'no'} |")
+        lines += ["", "The first gate failed. Every \"citation miss\" was a refusal (nothing to cite), and 4 of the 7 "
+                  "refusals were correct: the expected facts weren't in the retrieved sources. With approval, the same "
+                  "thresholds were re-applied to metric definitions that separate those cases; both runs are kept.", ""]
     for title, path in figs:
         lines += [f"### {title}", "", f"![{title}]({path})", ""]
 

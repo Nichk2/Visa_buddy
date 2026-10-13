@@ -77,14 +77,18 @@ def grade(answer: str, hits: list[dict], gold: dict, version: int = GRADER_VERSI
     if version >= 2 and gold.get("fact_keys"):
         supported = [f for f, keys in zip(facts, gold["fact_keys"])
                      if any(key_in(k, answer) and key_in(k, ctx) for k in keys)]
+        in_ctx = all(any(key_in(k, ctx) for k in keys) for keys in gold["fact_keys"])
     else:
         supported = [f for f in facts if fact_in(f, answer) and fact_in(f, ctx)]
+        in_ctx = all(fact_in(f, ctx) for f in facts)
     return {
         "grader_version": version,
         "citation_hit": bool(cited & retrieved),
         "fact_coverage": (len(supported) / len(facts)) if facts else None,
         "facts_supported": supported,
         "refused": refused,
+        # every expected fact is present in the retrieved sources (None for must-refuse rows)
+        "answer_in_context": (in_ctx if facts else None),
         "refusal_correct": refused == gold["must_refuse"],
         "unsupported": bool(unsupported_claims),
         "unsupported_claims": sorted(set(unsupported_claims)),

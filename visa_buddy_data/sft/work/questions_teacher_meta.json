@@ -1,0 +1,7 @@
+{
+ "teacher": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+ "vllm_version": "0.31.0",
+ "mistral_common_version": "1.12.0",
+ "gpu": "H100",
+ "received_sha256": "3bc155116b640fd06223d78a6a796d0f03c84506334fdee78021275d12e05cf7"
+}

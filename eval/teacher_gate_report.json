@@ -1,0 +1,42 @@
+{
+ "teacher": "mistralai/Mistral-Small-3.2-24B-Instruct-2506",
+ "gold": "gold_v2.jsonl",
+ "grader_version": 2,
+ "metrics_version": 2,
+ "thresholds": {
+  "citation_hit_min": 0.9,
+  "false_refusal_rate_max": 0.1,
+  "refusal_correct_on_must_refuse_min": 0.9,
+  "unsupported_max": 0.05,
+  "fact_coverage_min": 0.585
+ },
+ "threshold_applies_to": {
+  "citation_hit_min": "cite_when_answering",
+  "false_refusal_rate_max": "over_refusal_rate"
+ },
+ "supersedes_failed_gate_run": "32dcaaaba95d",
+ "overall": {
+  "metrics_version": 2,
+  "n": 66,
+  "n_answerable": 54,
+  "n_must_refuse": 12,
+  "cite_when_answering": 1.0,
+  "over_refusal_rate": 0.056,
+  "abstained_answer_not_in_context": 4,
+  "answer_in_context_rate": 0.833,
+  "citation_hit": 0.87,
+  "fact_coverage": 0.699,
+  "refusal_correct": 0.894,
+  "refusal_correct_on_must_refuse": 1.0,
+  "false_refusal_rate": 0.13,
+  "unsupported": 0.037
+ },
+ "checks": {
+  "cite_when_answering": true,
+  "over_refusal_rate": true,
+  "refusal_correct_on_must_refuse": true,
+  "unsupported": true,
+  "fact_coverage": true
+ },
+ "passed": true
+}

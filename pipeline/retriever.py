@@ -49,11 +49,18 @@ class Retriever:
         assert len(self.chunks) == len(self.emb), "index and chunk metadata out of sync"
         self.model = _model()
 
-    def search(self, query: str, k: int = TOP_K) -> list[dict]:
+    def search(self, query: str, k: int = TOP_K, allow=None) -> list[dict]:
+        """Top-k chunks by cosine similarity. `allow(chunk) -> bool` restricts the pool
+        (dataset building uses it to draw contexts from training pages only)."""
         q = self.model.encode([query], normalize_embeddings=True)[0].astype(np.float32)
         scores = self.emb @ q
-        top = np.argsort(-scores)[:k]
-        return [{**self.chunks[i], "score": float(scores[i]), "rank": r + 1} for r, i in enumerate(top)]
+        out = []
+        for i in np.argsort(-scores):
+            if allow is None or allow(self.chunks[i]):
+                out.append({**self.chunks[i], "score": float(scores[i]), "rank": len(out) + 1})
+                if len(out) == k:
+                    break
+        return out
 
 
 if __name__ == "__main__":

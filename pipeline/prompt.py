@@ -3,6 +3,8 @@ so the model is trained and scored on exactly what it sees in production."""
 from .config import OFFICIAL_INDEX_URL
 
 REFUSAL = "I don't have that in the official sources I searched."
+# The exact refusal used as a training target, so the fine-tune learns one fixed form.
+REFUSAL_OUTPUT = f"{REFUSAL} You can check the official IRCC website: {OFFICIAL_INDEX_URL}"
 
 SYSTEM = f"""You are Visa Buddy, an information assistant for Canadian immigration questions.
 You are not a lawyer and not a substitute for Immigration, Refugees and Citizenship Canada (IRCC).

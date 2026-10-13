@@ -32,7 +32,15 @@ def summarize(rows):
     def block(rs):
         ans = [r for r in rs if not r["must_refuse"]]
         ref = [r for r in rs if r["must_refuse"]]
-        return {"n": len(rs), "n_answerable": len(ans), "n_must_refuse": len(ref),
+        answered = [r for r in ans if not r["grade"]["refused"]]
+        return {"metrics_version": 2, "n": len(rs), "n_answerable": len(ans), "n_must_refuse": len(ref),
+                # v2 definitions: a refusal is not a citation miss, and refusing when the retrieved
+                # sources don't contain the answer is correct (abstention), not a false refusal
+                "cite_when_answering": round(sum(r["grade"]["citation_hit"] for r in answered) / len(answered), 3) if answered else None,
+                "over_refusal_rate": round(sum(r["grade"]["refused"] and bool(r["grade"].get("answer_in_context")) for r in ans) / len(ans), 3) if ans else None,
+                "abstained_answer_not_in_context": sum(r["grade"]["refused"] and r["grade"].get("answer_in_context") is False for r in ans),
+                "answer_in_context_rate": round(sum(bool(r["grade"].get("answer_in_context")) for r in ans) / len(ans), 3) if ans else None,
+                # v1 definitions, kept for continuity with earlier reports
                 "citation_hit": rate(ans, "citation_hit"),  # citations only expected on answers
                 "fact_coverage": rate(ans, "fact_coverage"),
                 "refusal_correct": rate(rs, "refusal_correct"),
