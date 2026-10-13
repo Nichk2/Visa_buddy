@@ -1,0 +1,54 @@
+{
+ "ans:36": {
+  "keep": true,
+  "reason": "same question/answer as a v2 row already checked against its source; flag paired the answer with an unrelated sentence"
+ },
+ "ans:110": {
+  "keep": true,
+  "reason": "same question/answer as a v2 row already checked against its source; flag paired the answer with an unrelated sentence"
+ },
+ "ans:274": {
+  "keep": true,
+  "reason": "same question/answer as a v2 row already checked against its source; flag paired the answer with an unrelated sentence"
+ },
+ "ans:327": {
+  "keep": true,
+  "reason": "same question/answer as a v2 row already checked against its source; flag paired the answer with an unrelated sentence"
+ },
+ "ans:352": {
+  "keep": true,
+  "reason": "same question/answer as a v2 row already checked against its source; flag paired the answer with an unrelated sentence"
+ },
+ "ans:353": {
+  "keep": true,
+  "reason": "same question/answer as a v2 row already checked against its source; flag paired the answer with an unrelated sentence"
+ },
+ "ans:411": {
+  "keep": true,
+  "reason": "same question/answer as a v2 row already checked against its source; flag paired the answer with an unrelated sentence"
+ },
+ "ans:463": {
+  "keep": true,
+  "reason": "same question/answer as a v2 row already checked against its source; flag paired the answer with an unrelated sentence"
+ },
+ "ans:60": {
+  "keep": true,
+  "reason": "source: paid work only, 'volunteer work or unpaid internships don't count'; answer matches"
+ },
+ "ans:115": {
+  "keep": true,
+  "reason": "source lists 'enrolling in a master's degree program' under 'not eligible' for faster processing"
+ },
+ "ans:586": {
+  "keep": true,
+  "reason": "source 'can only apply ... after you're approved' = answer 'can't apply before'"
+ },
+ "ans:602": {
+  "keep": true,
+  "reason": "source: 'you can still be eligible for a PGWP' and must use the language averaging tool"
+ },
+ "ans:623": {
+  "keep": true,
+  "reason": "source: 'not leave Canada until you get your visitor visa'; consequences listed match"
+ }
+}

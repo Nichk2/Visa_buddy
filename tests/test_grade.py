@@ -135,3 +135,11 @@ def test_v3_real_contradictions_still_caught():
     assert c("3-year", "You can't get a 3-year PGWP if your master's program was only 1 year.",
              "You can apply for a 3-year PGWP, even if your master's program was less than 2 years")
     assert c("stop working", "No, you don't have to stop working while you apply.", "You must stop working.")
+
+
+def test_polarity_flips_for_training_rows():
+    from pipeline.text import polarity_flips
+    src = "If you lose your status, you must stop working.\nYou must apply within 90 days of losing your status."
+    assert polarity_flips("No, you don't have to stop working if you lose your status.", src)
+    assert not polarity_flips("Yes, you must stop working if you lose your status.", src)
+    assert not polarity_flips("You must apply within 90 days of losing your status (Source: Restore, https://x.ca/a.html).", src)

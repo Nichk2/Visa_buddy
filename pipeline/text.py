@@ -103,3 +103,44 @@ def key_polarity_conflict(key: str, answer: str, source: str) -> bool:
     src = {_polarity(p) for p in _prefixes(k, s)}
     ans = {_polarity(p) for p in _prefixes(k, a)}
     return bool(src) and bool(ans - src)
+
+
+def _anchor(a_words: list[str], s_words: list[str]) -> str | None:
+    """Longest run of consecutive words shared by two sentences, if it has >= 2 content words
+    (e.g. "stop working"). It plays the role a gold fact key plays in grader v3."""
+    best = ""
+    for i in range(len(a_words)):
+        for j in range(len(s_words)):
+            k = 0
+            while i + k < len(a_words) and j + k < len(s_words) and a_words[i + k] == s_words[j + k]:
+                k += 1
+            if k and len(" ".join(a_words[i:i + k])) > len(best):
+                best = " ".join(a_words[i:i + k])
+    return best if len(tokens(best)) >= 2 else None
+
+
+def polarity_flips(answer: str, source: str, min_overlap: float = 0.5) -> list[tuple[str, str]]:
+    """For training data (no fact keys): pair each answer sentence with the source sentence that
+    shares most of its content words, take the longest phrase they share, and apply grader v3's
+    clause rule to it (negation before the phrase, within its clause). A mismatch means the
+    answer flipped a rule, like v2's "you don't have to stop working". Returns
+    (answer sentence, source sentence) pairs."""
+    def sentences(t):
+        t = re.sub(r"\(source:[^)]*\)|https?://\S+", " ", canon_lines(t))
+        return [x.strip() for x in re.split(r"(?<=[.!?])\s+|\n", t) if len(tokens(x)) >= 3]
+    words = lambda x: re.findall(r"[a-z0-9$'][a-z0-9$,.'/-]*[a-z0-9]|[a-z0-9$]", x)
+    src = [(x, set(tokens(x))) for x in sentences(source)]
+    flips = []
+    for a in sentences(answer):
+        at = set(tokens(a))
+        best, ov = None, 0.0
+        for x, xt in src:
+            o = len(at & xt) / len(at) if at else 0
+            if o > ov:
+                best, ov = x, o
+        if not best or ov < min_overlap:
+            continue
+        anchor = _anchor(words(a), words(best))
+        if anchor and key_polarity_conflict(anchor, a, best):
+            flips.append((a, best))
+    return flips
