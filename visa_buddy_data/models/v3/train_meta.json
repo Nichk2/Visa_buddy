@@ -1,0 +1,42 @@
+{
+ "base": "meta-llama/Llama-3.1-8B-Instruct",
+ "gpu": "A100",
+ "hp": {
+  "lora_r": 8,
+  "lora_alpha": 16,
+  "lora_dropout": 0.05,
+  "target_modules": [
+   "q_proj",
+   "v_proj"
+  ],
+  "epochs": 2,
+  "learning_rate": 0.0002,
+  "per_device_batch": 1,
+  "grad_accum": 8,
+  "max_len": 4096,
+  "warmup_ratio": 0.05,
+  "lr_scheduler": "cosine",
+  "seed": 13,
+  "quantization": "4bit-nf4, double quant",
+  "compute_dtype": "bfloat16",
+  "max_new_tokens_valid": 400
+ },
+ "smoke": false,
+ "data_version": "v3",
+ "trainable_params": 3407872,
+ "versions": {
+  "torch": "2.14.1+cu130",
+  "transformers": "5.19.0",
+  "peft": "0.21.2"
+ },
+ "received_sha256": {
+  "train": "40101e7458eff63af854831741d9b430de6dcd58e0d70a489de22557ae1f7f8b",
+  "valid": "ff65563b802cfdb1b900ff5bcb56b2489fdc95aaf21342e804832971542d0a5d"
+ },
+ "rows": {
+  "train": 414,
+  "valid": 67,
+  "train_dropped_too_long": 0,
+  "valid_dropped_too_long": 0
+ }
+}
