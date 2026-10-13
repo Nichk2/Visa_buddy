@@ -153,6 +153,26 @@ def fig_old_queries(audit_run):
     return _save(fig, "v1_v2_old_queries.png", f"eval/legacy_audit.json, ledger run {audit_run['run_id']}")
 
 
+def fig_baseline(brep, run_id):
+    o = brep["overall"]
+    rows = [("Cites a retrieved source", o["citation_hit"], True),
+            ("Expected facts covered", o["fact_coverage"], True),
+            ("Must-refuse questions refused", o["refusal_correct_on_must_refuse"], True),
+            ("Answerable questions refused", o["false_refusal_rate"], False),
+            ("States a number not in sources", o["unsupported"], False)]
+    fig, ax = plt.subplots(figsize=(7, 3.0))
+    y = list(range(len(rows)))[::-1]
+    for yi, (lab, v, good) in zip(y, rows):
+        ax.barh(yi, v, color=BLUE, height=0.55)
+        ax.text(v + 0.01, yi, f"{100 * v:.0f}%" + ("" if good else "  (lower is better)"), va="center", fontsize=8, color=INK)
+    ax.set_yticks(y, [r[0] for r in rows])
+    ax.set_xlim(0, 1.35)
+    ax.set_xticks([0, 0.25, 0.5, 0.75, 1.0], ["0%", "25%", "50%", "75%", "100%"])
+    _style(ax, "Baseline: Llama 3.1 8B, no fine-tune",
+           f"{o['n_answerable']} answerable + {o['n_must_refuse']} must-refuse gold questions, same prompt as serving")
+    return _save(fig, "baseline_overall.png", f"eval/baseline_report.json, ledger run {run_id}")
+
+
 def legacy_audit():
     """Facts about the old run, each read from a file in the repo."""
     old = ROOT / "visa_buddy_data" / "metrics"
@@ -189,7 +209,14 @@ def main():
         ok = r["metrics"]["passes_target"]
         lines.append(f"| recall@5 ≥ 0.7 before training | {'pass' if ok else 'FAIL'} | "
                      f"{r['metrics']['answerable']['recall@5']:.3f}, run `{r['run_id']}` |")
-    lines += ["| Baseline (no adapter) scored | not started | |",
+    base = tracking.load("eval_answers:baseline")
+    if base:
+        b = base[-1]
+        lines.append(f"| Baseline (no adapter) scored | done | {b['config']['model']}, {b['config']['quantization']}, "
+                     f"complete={b['metrics']['complete']}, run `{b['run_id']}` |")
+    else:
+        lines.append("| Baseline (no adapter) scored | not started | |")
+    lines += [
               "| SFT data card checks | not started | |",
               "| QLoRA training | not started | |", ""]
 
@@ -220,6 +247,18 @@ def main():
             lines += ["Misses at k=5:", ""]
             lines += [f"- `{x['id']}` {x['question']}" for x in rep["misses_at_5"]]
             lines.append("")
+    if base:
+        brep = json.loads((EVAL_DIR / "baseline_report.json").read_text())
+        figs.append(("Baseline answer quality", fig_baseline(brep, base[-1]["run_id"])))
+        lines += ["## Baseline answers (Llama 3.1 8B, no adapter)", "",
+                  "| Program | answerable | citation hit | fact coverage | unsupported | false refusal | must-refuse refused |",
+                  "|---|---|---|---|---|---|---|"]
+        f = lambda x: "–" if x is None else f"{x:.2f}"
+        for p, v in list(brep["per_program"].items()) + [("**overall**", brep["overall"])]:
+            lines.append(f"| {LABELS.get(p, p)} | {v['n_answerable']} | {f(v['citation_hit'])} | {f(v['fact_coverage'])} | "
+                         f"{f(v['unsupported'])} | {f(v['false_refusal_rate'])} | {f(v['refusal_correct_on_must_refuse'])} |")
+        lines += ["", "Grader v1 matches expected facts close to their wording on the page, so correct paraphrases "
+                  "(\"$7 CAD\" for \"CAN$7\") score as misses. Fact coverage here is a lower bound; see the grader audit.", ""]
     for title, path in figs:
         lines += [f"### {title}", "", f"![{title}]({path})", ""]
 

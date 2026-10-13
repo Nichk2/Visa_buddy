@@ -22,7 +22,7 @@ RUNS = {
     "chunk": "5b1ce79af2cb",
     "index": "2e8249737c2c",
     "retrieval": "933a39ed6a15",
-    "baseline": None,   # step 4
+    "baseline": "dae69d130eea",
     "train": None,      # step 6
     "adapterEval": None,  # step 7
 }
