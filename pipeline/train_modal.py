@@ -1,6 +1,7 @@
 """QLoRA fine-tune of Llama 3.1 8B Instruct on Modal (step 6).
 
     caffeinate -i modal run --detach pipeline/train_modal.py
+    caffeinate -i modal run --detach pipeline/train_modal.py --data v3   # v3 data -> models/v3
     modal run pipeline/train_modal.py --smoke          # same code and model on 8 rows, 1 epoch; output to models/smoke
     modal run pipeline/train_modal.py --fetch-only     # if the local client dropped mid-run
 
@@ -52,7 +53,7 @@ def _messages(row, with_answer):  # same system/user messages the chat server bu
 
 @app.function(gpu=GPU, timeout=3 * 60 * 60, secrets=[modal.Secret.from_name("hf-secret")],
               volumes={"/root/.cache/huggingface": hf_cache, "/out": out_vol})
-def train(train_rows: list, valid_rows: list, smoke: bool = False) -> dict:
+def train(train_rows: list, valid_rows: list, smoke: bool = False, version: str = "v2") -> dict:
     import os
     import shutil
 
@@ -145,7 +146,7 @@ def train(train_rows: list, valid_rows: list, smoke: bool = False) -> dict:
     trainer.train()
 
     best = max(range(len(epoch_scores)), key=lambda i: (epoch_scores[i]["fact_coverage"] or 0, epoch_scores[i]["epoch"]))
-    out = Path("/out/smoke" if smoke else "/out/v2")
+    out = Path("/out/smoke" if smoke else f"/out/{version}")  # each version keeps its own adapter
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(ckpt_dirs[best], out)
@@ -158,7 +159,7 @@ def train(train_rows: list, valid_rows: list, smoke: bool = False) -> dict:
         for e in epoch_scores:
             for r, o in zip(valid_rows, e["outputs"]):
                 f.write(json.dumps({"epoch": e["epoch"], "id": r["id"], "kind": r["kind"], "output": o}, ensure_ascii=False) + "\n")
-    meta = {"base": BASE, "gpu": GPU, "hp": hp, "smoke": smoke, "trainable_params": trainable,
+    meta = {"base": BASE, "gpu": GPU, "hp": hp, "smoke": smoke, "data_version": version, "trainable_params": trainable,
             "versions": {"torch": torch.__version__, "transformers": transformers.__version__, "peft": peft.__version__},
             "received_sha256": {"train": _digest(train_rows), "valid": _digest(valid_rows)},
             "rows": {"train": len(train_ds), "valid": len(valid_ds), "train_dropped_too_long": train_dropped,
@@ -169,24 +170,25 @@ def train(train_rows: list, valid_rows: list, smoke: bool = False) -> dict:
 
 
 @app.function(volumes={"/out": out_vol})
-def fetch() -> dict:
-    out = Path("/out/v2")
+def fetch(version: str = "v2") -> dict:
+    out = Path(f"/out/{version}")
     return {"files": {p.name: p.read_bytes() for p in out.iterdir() if p.is_file()},
             "meta": json.loads((out / "train_meta.json").read_text())}
 
 
 @app.local_entrypoint()
-def main(fetch_only: bool = False, smoke: bool = False):
-    sft = ROOT / "visa_buddy_data" / "sft"
+def main(fetch_only: bool = False, smoke: bool = False, data: str = "v2"):
+    # --data v3 trains on visa_buddy_data/sft_v3 and writes models/v3; v2's adapter is untouched
+    sft = ROOT / "visa_buddy_data" / ("sft" if data == "v2" else f"sft_{data}")
     train_rows = [json.loads(l) for l in (sft / "train.jsonl").read_text().splitlines() if l.strip()]
     valid_rows = [json.loads(l) for l in (sft / "valid.jsonl").read_text().splitlines() if l.strip()]
     print(f"training on {len(train_rows)} rows, validating on {len(valid_rows)} ({GPU})", flush=True)
     if smoke:  # plumbing check only: same code and model, tiny data, output kept apart
         train_rows, valid_rows = train_rows[:8], valid_rows[:2]
-    res = fetch.remote() if fetch_only else train.remote(train_rows, valid_rows, smoke)
+    res = fetch.remote(data) if fetch_only else train.remote(train_rows, valid_rows, smoke, data)
     assert res["meta"]["received_sha256"] == {"train": _digest(train_rows), "valid": _digest(valid_rows)}, \
         "job trained on different data"
-    dest = ROOT / "visa_buddy_data" / "models" / ("smoke" if smoke else "v2")
+    dest = ROOT / "visa_buddy_data" / "models" / ("smoke" if smoke else data)
     dest.mkdir(parents=True, exist_ok=True)
     for name, data in res["files"].items():
         (dest / name).write_bytes(data)
