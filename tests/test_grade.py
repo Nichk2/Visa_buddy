@@ -72,3 +72,66 @@ def test_v2_clb_level_forms():
     from pipeline.text import key_in
     assert key_in("CLB 7", "CLB level 7 or higher") and key_in("CLB 7", "Benchmarks (CLB) 7 in English")
     assert not key_in("CLB 7", "CLB 70")
+
+
+def test_v3_polarity_catches_t04_contradiction():
+    from pipeline.text import key_polarity_conflict
+    src = "If you lose your status. You must stop working."
+    assert key_polarity_conflict("stop working", "No, you don't have to stop working while you apply.", src)
+    assert not key_polarity_conflict("stop working", "Yes, you must stop working.", src)
+
+
+def test_v3_polarity_leading_no_and_negated_keys():
+    from pipeline.text import key_polarity_conflict
+    src = "If you're a permanent resident living outside Canada, you can't sponsor."
+    assert not key_polarity_conflict("can't sponsor", "No, you cannot sponsor your spouse.", src)
+    src2 = "You can't use equity on real property as proof of settlement funds."
+    assert not key_polarity_conflict("can't use equity", "No. You can't use equity in your house.", src2)
+
+
+def test_v3_polarity_clause_scope_and_double_negative():
+    from pipeline.text import key_polarity_conflict
+    src = "If you don't apply within 90 days, you must leave Canada."
+    assert not key_polarity_conflict("leave Canada", "You'll need to leave Canada and reapply.", src)
+    src2 = "You can't work without a work permit."
+    assert not key_polarity_conflict("work permit", "You can't work in Canada without a work permit.", src2)
+
+
+def test_v3_grade_withholds_credit_on_contradiction():
+    hits = [{"url": U, "title": "Restore", "text": "You must stop working."}]
+    gold = {"expected_facts": ["You must stop working"], "fact_keys": [["stop working"]], "must_refuse": False}
+    bad = grade(f"No, you don't have to stop working ({U}).", hits, gold)
+    assert bad["fact_coverage"] == 0 and bad["contradicts_source"]
+    good = grade(f"Yes, you must stop working ({U}).", hits, gold)
+    assert good["fact_coverage"] == 1 and not good["contradicts_source"]
+    assert grade(f"No, you don't have to stop working ({U}).", hits, gold, version=2)["fact_coverage"] == 1  # v2 reproducible
+
+
+def test_v3_numbers_in_titles_are_supported():
+    hits = [{"url": U, "title": "Find your NOC - version 2016", "text": "Enter your job title."}]
+    g = {"expected_facts": [], "must_refuse": True}
+    assert not grade("Use the 2016 table.", hits, g)["unsupported"]
+    assert grade("Use the 2016 table.", hits, g, version=2)["unsupported"]
+
+
+def test_v3_false_alarm_patterns_from_precision_review():
+    from pipeline.text import key_polarity_conflict as c
+    # table rows flattened into one clause (ee03)
+    assert not c("CLB 7", "The minimum is CLB 7 in all 4 abilities.",
+                 "CLB 8\n5\nCLB 7\n4\nBelow CLB 7\nNot eligible to apply")
+    # negation after the key (t05)
+    assert not c("lose your student status", "You can lose your student status and may not be approved again.",
+                 "You can lose your student status for doing this.")
+    # negation in the main clause, key in the condition (ee05)
+    assert not c("Canadian Experience Class", "You don't need proof of funds if you're applying under the Canadian Experience Class.",
+                 "You don't need to show proof of funds if:\n- you're applying under the Canadian Experience Class")
+    # heading line with "not" above the sentence that holds the key (fa06)
+    assert not c("5 years", "A super visa lets them stay for 5 years at a time.",
+                 "If you were not invited to apply\nA super visa lets them stay in Canada for 5 years at a time.")
+
+
+def test_v3_real_contradictions_still_caught():
+    from pipeline.text import key_polarity_conflict as c
+    assert c("3-year", "You can't get a 3-year PGWP if your master's program was only 1 year.",
+             "You can apply for a 3-year PGWP, even if your master's program was less than 2 years")
+    assert c("stop working", "No, you don't have to stop working while you apply.", "You must stop working.")

@@ -57,3 +57,49 @@ def key_in(key: str, text: str) -> bool:
     """Grader v2: an accepted key matches as an exact span after canonicalization."""
     k, t = canon(key), canon(text)
     return re.search(rf"(?<![\w$]){re.escape(k)}(?!\w)", t) is not None
+
+
+# --- grader v3: polarity (negation) check ---------------------------------------
+# Key matching alone can't see negation: on safety t04 the source says "You must stop working"
+# and the answer "No, you don't have to stop working" still matched the key "stop working".
+# v3 compares the polarity of the clause around each key in the answer with the source.
+# The rule was refined once after reading every flag from its first version (11 of 13 were
+# false alarms): lines are kept apart, only negations before the key count, and conditions
+# ("if ...") are their own clause. Each false-alarm pattern is now a unit test.
+_NEG = re.compile(r"\b(no|not|never|nor|without|don't|doesn't|didn't|can't|isn't|aren't|won't|wasn't|weren't|"
+                  r"shouldn't|mustn't|couldn't|wouldn't|neither|none|nobody|nothing)\b")
+# Clause boundaries. In "You don't need proof of funds if you're applying under the CEC" the
+# negation belongs to the main clause, not to the "if" clause that names the program.
+_CLAUSE = re.compile(r"[.;:!?\n,]|\b(?:but|unless|except|however|if|when|while|because|whereas)\b")
+# A leading "No," / "Yes," answers the question; it doesn't negate the fact that follows.
+_LEAD = re.compile(r"^\s*(?:-\s*)?(?:yes|no)\b[,.!]?\s*")
+
+
+def canon_lines(s: str) -> str:
+    """canon() per line, keeping line breaks: list items and table rows stay separate clauses
+    (flattening them let a "not" from one row negate the next)."""
+    return "\n".join(canon(line) for line in s.splitlines())
+
+
+def _prefixes(key_c: str, text_c: str) -> list[str]:
+    """For each occurrence of the key: the text from the start of its clause up to the key.
+    Negation usually comes before what it negates ("you can't [get a 3-year PGWP]"); a "not"
+    after the key belongs to the next phrase ("lose your status and may not be approved")."""
+    out = []
+    for m in re.finditer(rf"(?<![\w$]){re.escape(key_c)}(?!\w)", text_c):
+        starts = [b.end() for b in _CLAUSE.finditer(text_c, 0, m.start())]
+        out.append(text_c[starts[-1] if starts else 0:m.start()])
+    return out
+
+
+def _polarity(prefix: str) -> int:
+    """1 = affirmed, -1 = negated: parity of negation words before the key in its clause."""
+    return -1 if len(_NEG.findall(_LEAD.sub("", prefix))) % 2 else 1
+
+
+def key_polarity_conflict(key: str, answer: str, source: str) -> bool:
+    """True if the answer uses `key` with a polarity that no source mention of `key` has."""
+    k, a, s = canon(key), canon_lines(answer), canon_lines(source)
+    src = {_polarity(p) for p in _prefixes(k, s)}
+    ans = {_polarity(p) for p in _prefixes(k, a)}
+    return bool(src) and bool(ans - src)

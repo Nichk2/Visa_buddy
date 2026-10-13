@@ -39,6 +39,10 @@ def summarize(rows):
                 "cite_when_answering": round(sum(r["grade"]["citation_hit"] for r in answered) / len(answered), 3) if answered else None,
                 "over_refusal_rate": round(sum(r["grade"]["refused"] and bool(r["grade"].get("answer_in_context")) for r in ans) / len(ans), 3) if ans else None,
                 "abstained_answer_not_in_context": sum(r["grade"]["refused"] and r["grade"].get("answer_in_context") is False for r in ans),
+                # grader v3: share of answerable questions where the answer states a fact the
+                # opposite way round from the sources (None for runs graded before v3)
+                "contradicts_source": round(sum(bool(r["grade"].get("contradicts_source")) for r in ans) / len(ans), 3)
+                if ans and "contradicts_source" in ans[0]["grade"] else None,
                 "answer_in_context_rate": round(sum(bool(r["grade"].get("answer_in_context")) for r in ans) / len(ans), 3) if ans else None,
                 # v1 definitions, kept for continuity with earlier reports
                 "citation_hit": rate(ans, "citation_hit"),  # citations only expected on answers

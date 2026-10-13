@@ -21,7 +21,7 @@ import re
 
 from .config import OFFICIAL_INDEX_URL
 from .prompt import REFUSAL
-from .text import fact_in, key_in, norm
+from .text import fact_in, key_in, key_polarity_conflict, norm
 
 URL_RE = re.compile(r"https?://[^\s)\]>,\"']+")
 # A number plus an optional unit word, e.g. "$15,263", "24 hours", "180 days", "CLB 7", "1,095".
@@ -63,27 +63,37 @@ def _number_in(n: str, ctx_n: str) -> bool:
     return re.search(rf"(?<![\d.]){re.escape(digits)}(?![\d])", flat) is not None
 
 
-GRADER_VERSION = 2
+GRADER_VERSION = 3  # v3 = v2 + polarity check + titles read by the number check
 
 
 def grade(answer: str, hits: list[dict], gold: dict, version: int = GRADER_VERSION) -> dict:
     """version=1 reproduces the original grading; version=2 matches each fact by its
-    accepted keys (gold_v2 `fact_keys`) after money/contraction canonicalization."""
+    accepted keys (gold_v2 `fact_keys`) after money/contraction canonicalization;
+    version=3 also refuses credit when the answer states a fact with the opposite
+    polarity to the sources (and flags it as a contradiction)."""
     ctx = "\n".join(h["text"] for h in hits)
-    ctx_n = norm(ctx)
+    # v3: source titles count as source text for numbers ("version 2016" lives in the title)
+    num_ctx = "\n".join(f"{h.get('title', '')}\n{h['text']}" for h in hits) if version >= 3 else ctx
     retrieved = {h["url"] for h in hits}
     cited = _urls(answer)
     refused = norm(REFUSAL) in norm(answer)
 
     unsupported_claims = [u for u in cited if u not in retrieved and u.rstrip("/") != OFFICIAL_INDEX_URL.rstrip("/")]
+    num_ctx_n = norm(num_ctx)
     for n in _numbers(URL_RE.sub(" ", answer)):
-        if not _number_in(n, ctx_n):
+        if not _number_in(n, num_ctx_n):
             unsupported_claims.append(n)
 
     facts = gold.get("expected_facts", [])
+    contradicted = []
     if version >= 2 and gold.get("fact_keys"):
-        supported = [f for f, keys in zip(facts, gold["fact_keys"])
-                     if any(key_in(k, answer) and key_in(k, ctx) for k in keys)]
+        supported = []
+        for f, keys in zip(facts, gold["fact_keys"]):
+            matched = [k for k in keys if key_in(k, answer) and key_in(k, ctx)]
+            if version >= 3 and any(key_polarity_conflict(k, answer, ctx) for k in matched):
+                contradicted.append(f)  # answer states the fact the other way round
+            elif matched:
+                supported.append(f)
         in_ctx = all(any(key_in(k, ctx) for k in keys) for keys in gold["fact_keys"])
     else:
         supported = [f for f in facts if fact_in(f, answer) and fact_in(f, ctx)]
@@ -93,6 +103,8 @@ def grade(answer: str, hits: list[dict], gold: dict, version: int = GRADER_VERSI
         "citation_hit": bool(cited & retrieved),
         "fact_coverage": (len(supported) / len(facts)) if facts else None,
         "facts_supported": supported,
+        "facts_contradicted": contradicted,
+        "contradicts_source": bool(contradicted),
         "refused": refused,
         # every expected fact is present in the retrieved sources (None for must-refuse rows)
         "answer_in_context": (in_ctx if facts else None),
