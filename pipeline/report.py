@@ -197,6 +197,28 @@ def fig_audit(r1, r2, b1, b2, rid_retr, rid_regr):
     return _save(fig, "measurement_audit.png", f"ledger runs {rid_retr} (retrieval, gold_v2), {rid_regr} (regrade, gold_v2)")
 
 
+def fig_training(train_run):
+    st = json.loads((ROOT / "visa_buddy_data" / "models" / "v2" / "trainer_state.json").read_text())
+    tr = [h for h in st["log_history"] if "loss" in h]
+    ev = [h for h in st["log_history"] if "eval_loss" in h]
+    fig, ax = plt.subplots(figsize=(7, 3.4))
+    ax.plot([h["step"] for h in tr], [h["loss"] for h in tr], color=BLUE, linewidth=1.5, label="train loss (every step)")
+    ax.plot([h["step"] for h in ev], [h["eval_loss"] for h in ev], color=ORANGE, linewidth=2, marker="o", markersize=8,
+            markeredgecolor=SURFACE, markeredgewidth=2, label="validation loss (each epoch)")
+    sel = train_run["metrics"]["selected_epoch"]
+    sel_step = next(e["step"] for e in train_run["metrics"]["valid_by_epoch"] if e["epoch"] == sel)
+    ax.axvline(sel_step, color=INK2, linestyle="--", linewidth=1)
+    ax.text(sel_step, ax.get_ylim()[1], f" selected: epoch {sel}\n (best valid fact coverage)", color=INK2, fontsize=8, va="top")
+    ax.set_xlabel("optimizer step", fontsize=9, color=INK2)
+    ax.set_ylim(0, None)
+    ax.grid(axis="y", color=GRID, linewidth=0.8)
+    ax.grid(axis="x", visible=False)
+    ax.legend(frameon=False, fontsize=8, loc="lower left")
+    _style(ax, "v2 training loss, from trainer_state.json",
+           f"{st['global_step']} steps, {train_run['config']['rows']['train']} rows, QLoRA on {train_run['config']['gpu']}")
+    return _save(fig, "v2_training_loss.png", f"visa_buddy_data/models/v2/trainer_state.json, ledger run {train_run['run_id']}")
+
+
 def legacy_audit():
     """Facts about the old run, each read from a file in the repo."""
     old = ROOT / "visa_buddy_data" / "metrics"
@@ -257,7 +279,14 @@ def main():
                      f"refusal share {m['refusal_share_train']}, run `{sftb[-1]['run_id']}` |")
     else:
         lines.append("| SFT data card checks | not started | |")
-    lines += ["| QLoRA training | not started | |", ""]
+    trains = tracking.load("train")
+    if trains:
+        t = trains[-1]
+        lines.append(f"| QLoRA training | done | {t['config']['rows']['train']} rows, {t['metrics']['global_step']} steps, "
+                     f"selected epoch {t['metrics']['selected_epoch']} by valid fact coverage, run `{t['run_id']}` |")
+    else:
+        lines.append("| QLoRA training | not started | |")
+    lines += [""]
 
     figs = []
     audit = tracking.load("legacy_audit")
@@ -314,6 +343,20 @@ def main():
                   f"- Retrieval recall@5: {r1['answerable']['recall@5']:.3f} → {r2['answerable']['recall@5']:.3f} "
                   f"(citizenship stays {r2['per_program']['citizenship']['recall@5']:.2f}: a real retrieval gap)",
                   "- Pages held out of training grew from 28 to 64, since every gold source page is held out.", ""]
+    if trains:
+        figs.append(("Training: real loss curve", fig_training(trains[-1])))
+        v = trains[-1]["metrics"]["valid_by_epoch"]
+        lines += ["## Training (QLoRA on Modal)", "",
+                  "| epoch | valid fact coverage | cites when answering | over-refusal | refusal accuracy | unsupported |",
+                  "|---|---|---|---|---|---|"]
+        lines += [f"| {e['epoch']}{' (selected)' if e['epoch'] == trains[-1]['metrics']['selected_epoch'] else ''} | "
+                  f"{e['fact_coverage']:.3f} | {e['cite_when_answering']:.2f} | {e['over_refusal_rate']:.3f} | "
+                  f"{e['refusal_accuracy']:.3f} | {e['unsupported_rate']:.2f} |" for e in v]
+        lines += ["", "Epoch 2 had marginally lower validation loss but lower fact coverage and some over-refusal, "
+                  "so selecting by loss would have picked the worse checkpoint.", "",
+                  "![v1 loss curve, simulated](../visa_buddy_data/metrics/training_metrics_20251125_145813.png)", "",
+                  "*Above: the v1 \"loss curve\", drawn from `2.5·exp(-0.01·step)` over 500 steps. Below in Figures: the v2 "
+                  "curve, read from `trainer_state.json` of a real 78-step run.*", ""]
     if gates:
         lines += ["## Teacher gate (Mistral Small 3.2 24B on gold_v2)", "",
                   "| run | metric definitions | cite | refused although answer in sources | must-refuse refused | unsupported | fact coverage | passed |",

@@ -26,7 +26,7 @@ RUNS = {
     "goldV2": "790993006110",
     "retrievalGoldV2": "a6e8c331926c",
     "baselineGoldV2": "f851708cd6b9",
-    "train": None,      # step 6
+    "train": "fc6ace1a5255",
     "adapterEval": None,  # step 7
 }
 

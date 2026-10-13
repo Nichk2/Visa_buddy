@@ -1,6 +1,7 @@
 """QLoRA fine-tune of Llama 3.1 8B Instruct on Modal (step 6).
 
     caffeinate -i modal run --detach pipeline/train_modal.py
+    modal run pipeline/train_modal.py --smoke          # same code and model on 8 rows, 1 epoch; output to models/smoke
     modal run pipeline/train_modal.py --fetch-only     # if the local client dropped mid-run
 
 Settings follow the plan: 4-bit NF4 base (real QLoRA; v1 loaded 8-bit), LoRA r=8,
@@ -49,7 +50,7 @@ def _messages(row, with_answer):
 
 @app.function(gpu=GPU, timeout=3 * 60 * 60, secrets=[modal.Secret.from_name("hf-secret")],
               volumes={"/root/.cache/huggingface": hf_cache, "/out": out_vol})
-def train(train_rows: list, valid_rows: list) -> dict:
+def train(train_rows: list, valid_rows: list, smoke: bool = False) -> dict:
     import os
     import shutil
 
@@ -62,6 +63,7 @@ def train(train_rows: list, valid_rows: list) -> dict:
 
     from pipeline.valid_metrics import score_valid
 
+    hp = {**HP, **({"epochs": 1, "max_new_tokens_valid": 32} if smoke else {})}
     token = next((os.environ[k] for k in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN", "HUGGINGFACE_TOKEN", "HF_API_TOKEN")
                   if os.environ.get(k)), None)
     assert token, "hf-secret has no HF token under a known key"
@@ -111,7 +113,7 @@ def train(train_rows: list, valid_rows: list) -> dict:
         for r in valid_rows:
             enc = tok.apply_chat_template(_messages(r, False), add_generation_prompt=True, return_tensors="pt", return_dict=True)
             enc = {k: v.to(model.device) for k, v in enc.items()}
-            o = model.generate(**enc, max_new_tokens=HP["max_new_tokens_valid"], do_sample=False, pad_token_id=tok.pad_token_id,
+            o = model.generate(**enc, max_new_tokens=hp["max_new_tokens_valid"], do_sample=False, pad_token_id=tok.pad_token_id,
                                use_cache=True)  # gradient checkpointing turns the cache off by default
             outs.append(tok.decode(o[0, enc["input_ids"].shape[1]:], skip_special_tokens=True).strip())
         model.train()
@@ -131,9 +133,9 @@ def train(train_rows: list, valid_rows: list) -> dict:
             print(json.dumps({"epoch": ep, **s}), flush=True)
 
     args = TrainingArguments(
-        output_dir="/tmp/run", num_train_epochs=HP["epochs"], learning_rate=HP["learning_rate"],
+        output_dir="/tmp/run", num_train_epochs=hp["epochs"], learning_rate=HP["learning_rate"],
         per_device_train_batch_size=HP["per_device_batch"], per_device_eval_batch_size=1,
-        gradient_accumulation_steps=HP["grad_accum"], warmup_ratio=HP["warmup_ratio"],
+        gradient_accumulation_steps=HP["grad_accum"], warmup_steps=HP["warmup_ratio"],  # float < 1 = ratio in transformers 5.x
         lr_scheduler_type=HP["lr_scheduler"], logging_steps=1, eval_strategy="epoch", save_strategy="no",
         bf16=True, seed=HP["seed"], report_to=[], remove_unused_columns=False)
     trainer = Trainer(model=model, args=args, train_dataset=train_ds, eval_dataset=valid_ds,
@@ -141,7 +143,7 @@ def train(train_rows: list, valid_rows: list) -> dict:
     trainer.train()
 
     best = max(range(len(epoch_scores)), key=lambda i: (epoch_scores[i]["fact_coverage"] or 0, epoch_scores[i]["epoch"]))
-    out = Path("/out/v2")
+    out = Path("/out/smoke" if smoke else "/out/v2")
     if out.exists():
         shutil.rmtree(out)
     shutil.copytree(ckpt_dirs[best], out)
@@ -154,7 +156,7 @@ def train(train_rows: list, valid_rows: list) -> dict:
         for e in epoch_scores:
             for r, o in zip(valid_rows, e["outputs"]):
                 f.write(json.dumps({"epoch": e["epoch"], "id": r["id"], "kind": r["kind"], "output": o}, ensure_ascii=False) + "\n")
-    meta = {"base": BASE, "gpu": GPU, "hp": HP, "trainable_params": trainable,
+    meta = {"base": BASE, "gpu": GPU, "hp": hp, "smoke": smoke, "trainable_params": trainable,
             "versions": {"torch": torch.__version__, "transformers": transformers.__version__, "peft": peft.__version__},
             "received_sha256": {"train": _digest(train_rows), "valid": _digest(valid_rows)},
             "rows": {"train": len(train_ds), "valid": len(valid_ds), "train_dropped_too_long": train_dropped,
@@ -172,15 +174,17 @@ def fetch() -> dict:
 
 
 @app.local_entrypoint()
-def main(fetch_only: bool = False):
+def main(fetch_only: bool = False, smoke: bool = False):
     sft = ROOT / "visa_buddy_data" / "sft"
     train_rows = [json.loads(l) for l in (sft / "train.jsonl").read_text().splitlines() if l.strip()]
     valid_rows = [json.loads(l) for l in (sft / "valid.jsonl").read_text().splitlines() if l.strip()]
     print(f"training on {len(train_rows)} rows, validating on {len(valid_rows)} ({GPU})", flush=True)
-    res = fetch.remote() if fetch_only else train.remote(train_rows, valid_rows)
+    if smoke:  # plumbing check only: same code and model, tiny data, output kept apart
+        train_rows, valid_rows = train_rows[:8], valid_rows[:2]
+    res = fetch.remote() if fetch_only else train.remote(train_rows, valid_rows, smoke)
     assert res["meta"]["received_sha256"] == {"train": _digest(train_rows), "valid": _digest(valid_rows)}, \
         "job trained on different data"
-    dest = ROOT / "visa_buddy_data" / "models" / "v2"
+    dest = ROOT / "visa_buddy_data" / "models" / ("smoke" if smoke else "v2")
     dest.mkdir(parents=True, exist_ok=True)
     for name, data in res["files"].items():
         (dest / name).write_bytes(data)

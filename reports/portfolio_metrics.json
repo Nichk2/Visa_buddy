@@ -13,7 +13,7 @@
       "goldV2": "790993006110",
       "retrievalGoldV2": "a6e8c331926c",
       "baselineGoldV2": "f851708cd6b9",
-      "train": null,
+      "train": "fc6ace1a5255",
       "adapterEval": null
     }
   },
@@ -412,6 +412,45 @@
       }
     }
   },
-  "training": null,
+  "training": {
+    "selected_epoch": 1,
+    "valid_by_epoch": [
+      {
+        "epoch": 1,
+        "step": 39,
+        "fact_coverage": 0.8466,
+        "cite_when_answering": 1.0,
+        "over_refusal_rate": 0.0,
+        "refusal_accuracy": 0.7143,
+        "unsupported_rate": 0.0,
+        "n_answer": 34,
+        "n_refusal": 7
+      },
+      {
+        "epoch": 2,
+        "step": 78,
+        "fact_coverage": 0.7891,
+        "cite_when_answering": 1.0,
+        "over_refusal_rate": 0.0588,
+        "refusal_accuracy": 0.7143,
+        "unsupported_rate": 0.0,
+        "n_answer": 34,
+        "n_refusal": 7
+      }
+    ],
+    "global_step": 78,
+    "train_loss_first": 0.11082018166780472,
+    "train_loss_last": 0.1028440073132515,
+    "eval_loss_by_epoch": [
+      {
+        "epoch": 1.0,
+        "eval_loss": 0.08095499128103256
+      },
+      {
+        "epoch": 2.0,
+        "eval_loss": 0.08011763542890549
+      }
+    ]
+  },
   "adapter": null
 }

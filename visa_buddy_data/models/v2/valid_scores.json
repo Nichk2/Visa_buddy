@@ -1,0 +1,28 @@
+{
+ "selected_epoch": 1,
+ "selection_metric": "valid fact_coverage",
+ "epochs": [
+  {
+   "epoch": 1,
+   "step": 39,
+   "fact_coverage": 0.8466,
+   "cite_when_answering": 1.0,
+   "over_refusal_rate": 0.0,
+   "refusal_accuracy": 0.7143,
+   "unsupported_rate": 0.0,
+   "n_answer": 34,
+   "n_refusal": 7
+  },
+  {
+   "epoch": 2,
+   "step": 78,
+   "fact_coverage": 0.7891,
+   "cite_when_answering": 1.0,
+   "over_refusal_rate": 0.0588,
+   "refusal_accuracy": 0.7143,
+   "unsupported_rate": 0.0,
+   "n_answer": 34,
+   "n_refusal": 7
+  }
+ ]
+}
