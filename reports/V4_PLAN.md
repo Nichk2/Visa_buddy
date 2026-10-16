@@ -51,7 +51,7 @@ rules* to *reading the sources faithfully*.
 | 5 | Refused although the answer is in the sources (gold_v2 and rules_v1, each) | <= 0.05 | 0.037 / 0.000 |
 | 6 | Retrieval recall@5 on gold_v2: overall / citizenship | >= 0.889 / >= 0.70 | 0.889 / 0.62 |
 | 7 | Runs on the MacBook (M3, 8 GB), no Colab | median reply <= 15 s | n/a |
-| 8 | rules_yes_v1: wrong verdict / fact coverage | 0 / >= 0.6 | to be scored for v3 |
+| 8 | rules_yes_v1: wrong verdict / fact coverage | 0 / >= 0.6 | 0 / 0.727 (v2 and v3) |
 
 Comparisons are system to system: if v4 changes the corpus or retrieval, v3 is re-scored on
 the same corpus as well, and both results are reported.
@@ -67,6 +67,13 @@ the same corpus as well, and both results are reported.
 5. SFT data (quote-first + knowledge-conflict), gated teacher, data card.
 6. LoRA on Modal; compare untuned vs tuned vs v3.
 7. Serve on the Mac.
+
+## Finding from phase 0
+
+Every model gets all 11 "yes" rules right, and every wrong verdict on rules_v1 is a "Yes"
+where the official rule says "No" (r03, r05). The models lean permissive: they grant
+permissions the source doesn't grant. The knowledge-conflict training data (phase 5) should
+lean on rules that forbid or restrict.
 
 ## Changes to this plan
 
