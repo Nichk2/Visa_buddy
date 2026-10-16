@@ -26,12 +26,19 @@ REPORT = EVAL_DIR / "retrieval_report.json"
 TARGET = 0.7
 
 
-def main(gold_path: Path = GOLD_V1):
+def main(gold_path: Path = GOLD_V1, method: str = "dense", index_dir=None):
+    from .config import INDEX_DIR
+    index_dir = Path(index_dir) if index_dir else INDEX_DIR
     suffix = "" if Path(gold_path).name == GOLD_V1.name else "_" + Path(gold_path).stem  # e.g. _gold_v2
+    # v4 variants get their own files; the default (dense, original index) keeps v1-v3's names
+    if method != "dense":
+        suffix += f"_{method}"
+    if index_dir != INDEX_DIR:
+        suffix += f"_{index_dir.name}"
     PRED = EVAL_DIR / f"retrieval_predictions{suffix}.jsonl"
     REPORT = EVAL_DIR / f"retrieval_report{suffix}.json"
     gold = [json.loads(l) for l in Path(gold_path).read_text().splitlines() if l.strip()]
-    ret = Retriever()
+    ret = Retriever(index_dir, method)
     preds = []
     for g in gold:
         hits = ret.search(g["question"], k=max(KS))
@@ -104,8 +111,9 @@ def main(gold_path: Path = GOLD_V1):
     }
     REPORT.write_text(json.dumps(report, indent=1, ensure_ascii=False))
     print_table(report)
-    tracking.record("eval_retrieval", inputs=[gold_path, EMB, META], outputs=[PRED, REPORT],
-                    config={"top_k": TOP_K, "ks": KS, "target": TARGET},
+    tracking.record("eval_retrieval", inputs=[gold_path, index_dir / "embeddings.npy", index_dir / "chunks.jsonl"],
+                    outputs=[PRED, REPORT],
+                    config={"top_k": TOP_K, "ks": KS, "target": TARGET, "method": method, "index_dir": str(index_dir.name)},
                     metrics={k: report[k] for k in ("answerable", "per_program", "must_refuse", "top1_score", "passes_target")})
     return report
 
@@ -128,4 +136,10 @@ def print_table(rep):
 
 
 if __name__ == "__main__":
-    main(Path(sys.argv[1]) if len(sys.argv) > 1 else GOLD_V1)
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("gold", nargs="?", default=str(GOLD_V1))
+    ap.add_argument("--method", default="dense", choices=["dense", "hybrid"])
+    ap.add_argument("--index-dir", default=None)
+    a = ap.parse_args()
+    main(Path(a.gold), a.method, a.index_dir)

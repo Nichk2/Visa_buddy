@@ -21,11 +21,11 @@ def tag(url: str) -> str | None:
     return EXTRA_URLS.get(url) or program_for(url)
 
 
-def crawl() -> list[dict]:
+def crawl(max_pages: int = MAX_PAGES, max_per_program: int = MAX_PAGES_PER_PROGRAM) -> list[dict]:
     base = f"https://www.canada.ca{IRCC_PREFIX}"
     queue = deque([(START_URL, 0)] + [(base + p, 0) for p in SEED_PATHS] + [(u, 0) for u in EXTRA_URLS])
     seen, docs, per_prog, skipped = set(), {}, Counter(), Counter()
-    while queue and len(docs) < MAX_PAGES:
+    while queue and len(docs) < max_pages:
         url, depth = queue.popleft()
         if url in seen:
             continue
@@ -33,7 +33,7 @@ def crawl() -> list[dict]:
         prog = tag(url)
         if url != START_URL and prog is None:
             continue
-        if prog and per_prog[prog] >= MAX_PAGES_PER_PROGRAM:
+        if prog and per_prog[prog] >= max_per_program:
             skipped["program_cap"] += 1
             continue
         try:
@@ -63,13 +63,14 @@ def crawl() -> list[dict]:
     return list(docs.values()), skipped
 
 
-def add_gold_sources():
-    """Fetch gold source pages the crawl didn't reach. They're flagged, and the count is
+def add_gold_sources(docs_path=DOCS):
+    """Fetch eval source pages the crawl didn't reach. They're flagged, and the count is
     reported, so recall isn't credited to a crawler that never found the page."""
-    from .config import GOLD_V1
-    docs = [json.loads(l) for l in DOCS.read_text().splitlines() if l.strip()]
+    from .config import GOLD_FILES
+    DOCS_ = docs_path
+    docs = [json.loads(l) for l in DOCS_.read_text().splitlines() if l.strip()]
     have = {d["url"] for d in docs}
-    gold = [json.loads(l) for l in GOLD_V1.read_text().splitlines() if l.strip()]
+    gold = [json.loads(l) for p in GOLD_FILES if p.exists() for l in p.read_text().splitlines() if l.strip()]
     need = sorted({u for g in gold for u in g["source_urls"]} - have)
     added = []
     for u in need:
@@ -77,23 +78,34 @@ def add_gold_sources():
         if d and d["status"] == 200 and d["url"] == u:
             added.append({"url": u, "title": d["title"], "fetched_at": d["fetched_at"], "program": tag(u),
                           "text": d["text"], "added_for_gold_coverage": True})
-    with open(DOCS, "w") as f:
+    with open(DOCS_, "w") as f:
         for d in sorted(docs + added, key=lambda d: d["url"]):
             f.write(json.dumps(d, ensure_ascii=False) + "\n")
     print(f"gold sources reached by crawl: {len(set().union(*[g['source_urls'] for g in gold])) - len(need)}; added: {[a['url'] for a in added]}")
-    tracking.record("add_gold_sources", inputs=[GOLD_V1], outputs=[DOCS],
+    tracking.record("add_gold_sources", inputs=[p for p in GOLD_FILES if p.exists()], outputs=[DOCS_],
                     metrics={"gold_source_pages": len({u for g in gold for u in g["source_urls"]}),
                              "missing_after_crawl": len(need), "added": len(added),
                              "added_urls": [a["url"] for a in added]})
 
 
 def main():
-    import sys
-    if "--add-gold-sources" in sys.argv:
-        return add_gold_sources()
-    CORPUS_DIR.mkdir(parents=True, exist_ok=True)
-    docs, skipped = crawl()
-    with open(DOCS, "w") as f:
+    # v4 crawls into a new folder (python -m pipeline.corpus --out visa_buddy_data/corpus_v2
+    # --max-pages 2000 --max-per-program 400) so v1-v3's corpus and index stay reproducible.
+    import argparse
+    from pathlib import Path
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--add-gold-sources", action="store_true")
+    ap.add_argument("--out", default=str(CORPUS_DIR))
+    ap.add_argument("--max-pages", type=int, default=MAX_PAGES)
+    ap.add_argument("--max-per-program", type=int, default=MAX_PAGES_PER_PROGRAM)
+    a = ap.parse_args()
+    out_dir = Path(a.out)
+    docs_path = out_dir / "docs.jsonl"
+    if a.add_gold_sources:
+        return add_gold_sources(docs_path)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    docs, skipped = crawl(a.max_pages, a.max_per_program)
+    with open(docs_path, "w") as f:
         for d in sorted(docs, key=lambda d: d["url"]):
             f.write(json.dumps(d, ensure_ascii=False) + "\n")
     by_prog = Counter(d["program"] for d in docs)
@@ -101,8 +113,8 @@ def main():
     for d in docs:
         chars[d["program"]] += len(d["text"])
     print(dict(by_prog), dict(skipped))
-    tracking.record("crawl", outputs=[DOCS],
-                    config={"max_pages": MAX_PAGES, "max_per_program": MAX_PAGES_PER_PROGRAM,
+    tracking.record("crawl" if out_dir == CORPUS_DIR else f"crawl:{out_dir.name}", outputs=[docs_path],
+                    config={"max_pages": a.max_pages, "max_per_program": a.max_per_program,
                             "max_depth": MAX_DEPTH, "min_doc_chars": MIN_DOC_CHARS, "seeds": SEED_PATHS},
                     metrics={"docs": len(docs), "docs_per_program": dict(by_prog),
                              "chars_per_program": dict(chars), "skipped": dict(skipped)})
