@@ -43,6 +43,9 @@ def summarize(rows):
                 # opposite way round from the sources (None for runs graded before v3)
                 "contradicts_source": round(sum(bool(r["grade"].get("contradicts_source")) for r in ans) / len(ans), 3)
                 if ans and "contradicts_source" in ans[0]["grade"] else None,
+                # rules set only: answers that open with the opposite of the correct yes/no
+                "wrong_verdict_rate": round(sum(bool(r["grade"].get("wrong_verdict")) for r in ans) / len(ans), 3)
+                if ans and "wrong_verdict" in ans[0]["grade"] else None,
                 "answer_in_context_rate": round(sum(bool(r["grade"].get("answer_in_context")) for r in ans) / len(ans), 3) if ans else None,
                 # v1 definitions, kept for continuity with earlier reports
                 "citation_hit": rate(ans, "citation_hit"),  # citations only expected on answers

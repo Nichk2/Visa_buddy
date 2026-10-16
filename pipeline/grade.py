@@ -98,8 +98,14 @@ def grade(answer: str, hits: list[dict], gold: dict, version: int = GRADER_VERSI
     else:
         supported = [f for f in facts if fact_in(f, answer) and fact_in(f, ctx)]
         in_ctx = all(fact_in(f, ctx) for f in facts)
+    # Rules set: the answer's opening "Yes"/"No" against the correct verdict. Stating the
+    # opposite rule (v3: "No, you can't get a 3-year PGWP") is the failure v4 targets.
+    lead = re.match(r"\W*(yes|no)\b", norm(answer))
+    verdict_given = lead.group(1) if lead and not refused else None
     return {
         "grader_version": version,
+        "verdict_given": verdict_given,
+        "wrong_verdict": bool(gold.get("verdict") and verdict_given and verdict_given != gold["verdict"]),
         "citation_hit": bool(cited & retrieved),
         "fact_coverage": (len(supported) / len(facts)) if facts else None,
         "facts_supported": supported,

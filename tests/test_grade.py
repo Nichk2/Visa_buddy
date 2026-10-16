@@ -156,3 +156,11 @@ def test_guard_keeps_answer_and_quotes_source():
     assert guard(REFUSAL_OUTPUT, hits) == (REFUSAL_OUTPUT, [])  # refusals untouched
     ok = f"You can apply for a 3-year PGWP even if your master's program was less than 2 years ({U})."
     assert guard(ok, hits) == (ok, [])
+
+
+def test_verdict_check():
+    hits = [{"url": U, "title": "t", "text": "You can't work before your studies begin."}]
+    g = {"expected_facts": ["can't work before"], "fact_keys": [["can't work before"]], "must_refuse": False, "verdict": "no"}
+    assert grade(f"Yes, you can start early ({U}).", hits, g)["wrong_verdict"]
+    assert not grade(f"No, you can't work before your studies begin ({U}).", hits, g)["wrong_verdict"]
+    assert grade(f"You can't work before your studies begin ({U}).", hits, g)["verdict_given"] is None
