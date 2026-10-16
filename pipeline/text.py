@@ -81,12 +81,15 @@ def canon_lines(s: str) -> str:
     return "\n".join(canon(line) for line in s.splitlines())
 
 
-def _prefixes(key_c: str, text_c: str) -> list[str]:
+def _prefixes(key_c: str, text_c: str, flexible: bool = False) -> list[str]:
     """For each occurrence of the key: the text from the start of its clause up to the key.
     Negation usually comes before what it negates ("you can't [get a 3-year PGWP]"); a "not"
     after the key belongs to the next phrase ("lose your status and may not be approved")."""
     out = []
-    for m in re.finditer(rf"(?<![\w$]){re.escape(key_c)}(?!\w)", text_c):
+    # flexible: the words of the key may be separated by any punctuation ("50 of" matches "50% of");
+    # needed for anchors built from word lists (v4). Off by default so v3 results reproduce.
+    pat = r"[^\w$]+".join(map(re.escape, key_c.split())) if flexible else re.escape(key_c)
+    for m in re.finditer(rf"(?<![\w$]){pat}(?!\w)", text_c):
         starts = [b.end() for b in _CLAUSE.finditer(text_c, 0, m.start())]
         out.append(text_c[starts[-1] if starts else 0:m.start()])
     return out
@@ -97,11 +100,11 @@ def _polarity(prefix: str) -> int:
     return -1 if len(_NEG.findall(_LEAD.sub("", prefix))) % 2 else 1
 
 
-def key_polarity_conflict(key: str, answer: str, source: str) -> bool:
+def key_polarity_conflict(key: str, answer: str, source: str, flexible: bool = False) -> bool:
     """True if the answer uses `key` with a polarity that no source mention of `key` has."""
     k, a, s = canon(key), canon_lines(answer), canon_lines(source)
-    src = {_polarity(p) for p in _prefixes(k, s)}
-    ans = {_polarity(p) for p in _prefixes(k, a)}
+    src = {_polarity(p) for p in _prefixes(k, s, flexible)}
+    ans = {_polarity(p) for p in _prefixes(k, a, flexible)}
     return bool(src) and bool(ans - src)
 
 
@@ -119,7 +122,7 @@ def _anchor(a_words: list[str], s_words: list[str]) -> str | None:
     return best if len(tokens(best)) >= 2 else None
 
 
-def polarity_flips(answer: str, source: str, min_overlap: float = 0.5) -> list[tuple[str, str]]:
+def polarity_flips(answer: str, source: str, min_overlap: float = 0.5, flexible: bool = False) -> list[tuple[str, str]]:
     """For training data (no fact keys): pair each answer sentence with the source sentence that
     shares most of its content words, take the longest phrase they share, and apply grader v3's
     clause rule to it (negation before the phrase, within its clause). A mismatch means the
@@ -141,6 +144,6 @@ def polarity_flips(answer: str, source: str, min_overlap: float = 0.5) -> list[t
         if not best or ov < min_overlap:
             continue
         anchor = _anchor(words(a), words(best))
-        if anchor and key_polarity_conflict(anchor, a, best):
+        if anchor and key_polarity_conflict(anchor, a, best, flexible):
             flips.append((a, best))
     return flips
