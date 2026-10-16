@@ -8,6 +8,7 @@ gold question (any gold version) are marked split="gold_heldout": they stay in t
 by page URL, so overlapping chunks of one page can't land on both sides.
 """
 import hashlib
+import re
 import json
 from collections import Counter
 
@@ -90,8 +91,35 @@ def chunk_doc(doc: dict) -> list[dict]:
     return chunks
 
 
-def main():
-    docs = [json.loads(l) for l in DOCS.read_text().splitlines() if l.strip()]
+# v4 page labels. Depth isn't what lets bad sources in (the crawl is fenced to IRCC's program
+# pages); the risk is official pages that are wrong for an applicant asking today.
+#   archived / historical: rules for past years or retired tools -> not indexed at all
+#   employer / pilot: correct but for another audience or program -> indexed with a label,
+#   never a source for training answers
+def page_type(d: dict) -> str:
+    url, title = d["url"], d["title"].lower()
+    if "archived" in title:
+        return "archived"
+    if re.search(r"act-changes/(rules|requirements)-\d{4}", url):
+        return "historical"
+    if "/hire-" in url:
+        return "employer"
+    if re.search(r"pilot", url):
+        return "pilot"
+    return "current"
+
+
+def main(docs_path=DOCS, out_dir=CORPUS_DIR, label_pages: bool = False):
+    from pathlib import Path
+    out_dir = Path(out_dir)
+    chunks_path, split_path = out_dir / "chunks.jsonl", out_dir / "split.json"
+    docs = [json.loads(l) for l in Path(docs_path).read_text().splitlines() if l.strip()]
+    types = Counter()
+    if label_pages:
+        for d in docs:
+            d["page_type"] = page_type(d)
+            types[d["page_type"]] += 1
+        docs = [d for d in docs if d["page_type"] not in ("archived", "historical")]
     gold_files = [p for p in GOLD_FILES if p.exists()]
     gold = [json.loads(l) for p in gold_files for l in p.read_text().splitlines() if l.strip()]
     gold_urls = {u for g in gold for u in g["source_urls"]}
@@ -102,7 +130,8 @@ def main():
 
     chunks, seen_text, dropped = [], set(), 0
     for d in docs:
-        split = "gold_heldout" if d["url"] in gold_urls else "train_eligible"
+        split = "gold_heldout" if d["url"] in gold_urls else (
+            "train_eligible" if d.get("page_type", "current") == "current" else "index_only")
         for c in chunk_doc(d):
             key = " ".join(c["text"].split())
             # Identical text already indexed: shared page blocks and questionnaire pages (one page
@@ -112,26 +141,31 @@ def main():
                 continue
             seen_text.add(key)
             c["split"] = split
+            if "page_type" in d:
+                c["page_type"] = d["page_type"]
             chunks.append(c)
-    with open(CHUNKS, "w") as f:
+    with open(chunks_path, "w") as f:
         for c in chunks:
             f.write(json.dumps(c, ensure_ascii=False) + "\n")
 
+    index_only = {d["url"] for d in docs if d.get("page_type", "current") != "current"} - gold_urls
     split = {"gold_heldout": sorted(gold_urls),
-             "train_eligible": sorted(corpus_urls - gold_urls)}
+             "train_eligible": sorted({d["url"] for d in docs} - gold_urls - index_only),
+             "index_only": sorted(index_only)}
     assert not set(split["gold_heldout"]) & set(split["train_eligible"])  # no page on both sides
-    SPLIT.write_text(json.dumps(split, indent=1))
+    split_path.write_text(json.dumps(split, indent=1))
 
     lens = sorted(len(c["text"]) for c in chunks)
     by_prog = Counter(c["program"] for c in chunks)
     by_split = Counter(c["split"] for c in chunks)
-    metrics = {"docs": len(docs), "chunks": len(chunks), "duplicate_chunks_dropped": dropped, "chunks_per_program": dict(by_prog),
+    metrics = {"page_types": dict(types), "docs": len(docs), "chunks": len(chunks), "duplicate_chunks_dropped": dropped, "chunks_per_program": dict(by_prog),
                "chunks_per_split": dict(by_split),
                "pages_per_split": {k: len(v) for k, v in split.items()},
                "chunk_chars_p10_p50_p90": [lens[len(lens) // 10], lens[len(lens) // 2], lens[9 * len(lens) // 10]],
                "chunk_len_hist": hist(lens)}
     print(json.dumps({k: v for k, v in metrics.items() if k != "chunk_len_hist"}, indent=1))
-    tracking.record("chunk", inputs=[DOCS, *gold_files], outputs=[CHUNKS, SPLIT],
+    tracking.record("chunk" if out_dir == CORPUS_DIR else f"chunk:{out_dir.name}", inputs=[Path(docs_path), *gold_files],
+                    outputs=[chunks_path, split_path],
                     config={"chunk_chars": CHUNK_CHARS, "overlap": CHUNK_OVERLAP, "split_by": "page_url",
                             "dedupe": "repeated sections within page + identical chunk text across corpus"},
                     metrics=metrics)
@@ -143,4 +177,9 @@ def hist(lens, width=100):
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    if len(sys.argv) > 1:  # python -m pipeline.chunk visa_buddy_data/corpus_v2  (v4: with page labels)
+        from pathlib import Path
+        main(Path(sys.argv[1]) / "docs.jsonl", Path(sys.argv[1]), label_pages=True)
+    else:
+        main()

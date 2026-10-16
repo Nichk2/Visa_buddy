@@ -1,0 +1,167 @@
+{
+ "gold_file": "gold_v2.jsonl",
+ "top_k": 5,
+ "answerable": {
+  "n": 54,
+  "recall@1": 0.648,
+  "recall@3": 0.87,
+  "recall@5": 0.944,
+  "recall@10": 0.981,
+  "mrr@10": 0.77,
+  "fact_coverage@5": 0.944,
+  "all_facts@5": 0.907,
+  "top1_program_match": 0.944
+ },
+ "per_program": {
+  "express_entry": {
+   "n": 8,
+   "recall@1": 0.625,
+   "recall@3": 0.75,
+   "recall@5": 1.0,
+   "recall@10": 1.0,
+   "mrr@10": 0.729,
+   "fact_coverage@5": 1.0,
+   "all_facts@5": 1.0,
+   "top1_program_match": 1.0
+  },
+  "study_permit": {
+   "n": 8,
+   "recall@1": 0.875,
+   "recall@3": 0.875,
+   "recall@5": 1.0,
+   "recall@10": 1.0,
+   "mrr@10": 0.906,
+   "fact_coverage@5": 1.0,
+   "all_facts@5": 1.0,
+   "top1_program_match": 0.875
+  },
+  "work_permit": {
+   "n": 7,
+   "recall@1": 0.429,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0,
+   "mrr@10": 0.667,
+   "fact_coverage@5": 1.0,
+   "all_facts@5": 1.0,
+   "top1_program_match": 1.0
+  },
+  "pgwp": {
+   "n": 8,
+   "recall@1": 0.625,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0,
+   "mrr@10": 0.792,
+   "fact_coverage@5": 0.875,
+   "all_facts@5": 0.75,
+   "top1_program_match": 0.75
+  },
+  "visitor": {
+   "n": 8,
+   "recall@1": 0.5,
+   "recall@3": 0.75,
+   "recall@5": 0.75,
+   "recall@10": 1.0,
+   "mrr@10": 0.661,
+   "fact_coverage@5": 0.812,
+   "all_facts@5": 0.75,
+   "top1_program_match": 1.0
+  },
+  "family": {
+   "n": 7,
+   "recall@1": 0.714,
+   "recall@3": 0.857,
+   "recall@5": 1.0,
+   "recall@10": 1.0,
+   "mrr@10": 0.814,
+   "fact_coverage@5": 1.0,
+   "all_facts@5": 1.0,
+   "top1_program_match": 1.0
+  },
+  "citizenship": {
+   "n": 8,
+   "recall@1": 0.75,
+   "recall@3": 0.875,
+   "recall@5": 0.875,
+   "recall@10": 0.875,
+   "mrr@10": 0.812,
+   "fact_coverage@5": 0.938,
+   "all_facts@5": 0.875,
+   "top1_program_match": 1.0
+  }
+ },
+ "must_refuse": {
+  "n": 12,
+  "n_with_answer_markers": 9,
+  "retrieval_ok_with_markers": 1.0,
+  "no_marker_rows_pass_trivially": 3,
+  "by_reason": {
+   "out_of_index_provincial": {
+    "n": 3,
+    "ok": 3
+   },
+   "out_of_index_program": {
+    "n": 1,
+    "ok": 1
+   },
+   "personal_assessment": {
+    "n": 2,
+    "ok": 2
+   },
+   "legal_strategy": {
+    "n": 2,
+    "ok": 2
+   },
+   "not_on_page": {
+    "n": 4,
+    "ok": 4
+   }
+  }
+ },
+ "top1_score": {
+  "answerable_mean": 7.366,
+  "must_refuse_mean": 3.072
+ },
+ "target_recall@5": 0.7,
+ "passes_target": true,
+ "misses_at_5": [
+  {
+   "id": "vi02",
+   "question": "How do I extend my stay in Canada as a visitor?",
+   "expected": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/extend-stay/about.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/extend-stay/eligibility.html"
+   ],
+   "got_top3": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/work-canada/extend/change-jobs-employers/lose-job.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/extend-stay.html"
+   ]
+  },
+  {
+   "id": "vi07",
+   "question": "What is the fee for a Canadian visitor visa?",
+   "expected": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/visitor-visa.html"
+   ],
+   "got_top3": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-visitor-visa.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/apply-new-temporary-resident-visa-within-canada/paper-inside-canada-new-visa.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/application/application-forms-guides/guide-5256-applying-visitor-visa-temporary-resident-visa.html"
+   ]
+  },
+  {
+   "id": "ci06",
+   "question": "What topics does the citizenship test cover?",
+   "expected": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/adult-minor/who.html"
+   ],
+   "got_top3": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/test/study.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/test/results.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/test/study.html"
+   ]
+  }
+ ]
+}

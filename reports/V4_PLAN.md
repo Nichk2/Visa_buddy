@@ -75,6 +75,18 @@ where the official rule says "No" (r03, r05). The models lean permissive: they g
 permissions the source doesn't grant. The knowledge-conflict training data (phase 5) should
 lean on rules that forbid or restrict.
 
+## Phase 2 results (2026-10-16)
+
+- corpus_v2: 610 pages crawled (was 495); 113 new work-permit pages (the old 130-page cap),
+  and pages now cover the 2024-25 visitor-to-work-permit and spouse open-work-permit changes.
+  35 existing pages changed text in the 5 days since the first crawl. No eval fact was affected
+  (2 eval source pages changed: an expired maintenance notice on the eTA pages).
+- Page labels: 6 pages excluded (1 archived, 5 historical rules); 50 employer-facing or pilot
+  pages kept as index-only (never sources for training answers).
+- Retrieval, gold_v2 recall@5 (corpus_v2): dense 0.889 -> hybrid 0.944; citizenship 0.62 -> 0.88.
+  **Criterion 6 met.** Known loss: vi07 (visitor visa fee) drops from rank 4 to 6 under hybrid;
+  left as is rather than tuned to one test question.
+
 ## Changes to this plan
 
 (none yet)

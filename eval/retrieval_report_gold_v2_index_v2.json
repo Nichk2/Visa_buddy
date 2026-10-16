@@ -1,0 +1,207 @@
+{
+ "gold_file": "gold_v2.jsonl",
+ "top_k": 5,
+ "answerable": {
+  "n": 54,
+  "recall@1": 0.593,
+  "recall@3": 0.833,
+  "recall@5": 0.889,
+  "recall@10": 0.963,
+  "mrr@10": 0.712,
+  "fact_coverage@5": 0.847,
+  "all_facts@5": 0.815,
+  "top1_program_match": 0.981
+ },
+ "per_program": {
+  "express_entry": {
+   "n": 8,
+   "recall@1": 0.625,
+   "recall@3": 0.75,
+   "recall@5": 1.0,
+   "recall@10": 1.0,
+   "mrr@10": 0.744,
+   "fact_coverage@5": 0.875,
+   "all_facts@5": 0.875,
+   "top1_program_match": 1.0
+  },
+  "study_permit": {
+   "n": 8,
+   "recall@1": 0.875,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0,
+   "mrr@10": 0.938,
+   "fact_coverage@5": 1.0,
+   "all_facts@5": 1.0,
+   "top1_program_match": 1.0
+  },
+  "work_permit": {
+   "n": 7,
+   "recall@1": 0.857,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0,
+   "mrr@10": 0.929,
+   "fact_coverage@5": 1.0,
+   "all_facts@5": 1.0,
+   "top1_program_match": 1.0
+  },
+  "pgwp": {
+   "n": 8,
+   "recall@1": 0.5,
+   "recall@3": 1.0,
+   "recall@5": 1.0,
+   "recall@10": 1.0,
+   "mrr@10": 0.688,
+   "fact_coverage@5": 0.938,
+   "all_facts@5": 0.875,
+   "top1_program_match": 0.875
+  },
+  "visitor": {
+   "n": 8,
+   "recall@1": 0.5,
+   "recall@3": 0.75,
+   "recall@5": 0.875,
+   "recall@10": 1.0,
+   "mrr@10": 0.628,
+   "fact_coverage@5": 0.938,
+   "all_facts@5": 0.875,
+   "top1_program_match": 1.0
+  },
+  "family": {
+   "n": 7,
+   "recall@1": 0.286,
+   "recall@3": 0.714,
+   "recall@5": 0.714,
+   "recall@10": 1.0,
+   "mrr@10": 0.492,
+   "fact_coverage@5": 0.607,
+   "all_facts@5": 0.571,
+   "top1_program_match": 1.0
+  },
+  "citizenship": {
+   "n": 8,
+   "recall@1": 0.5,
+   "recall@3": 0.625,
+   "recall@5": 0.625,
+   "recall@10": 0.75,
+   "mrr@10": 0.562,
+   "fact_coverage@5": 0.562,
+   "all_facts@5": 0.5,
+   "top1_program_match": 1.0
+  }
+ },
+ "must_refuse": {
+  "n": 12,
+  "n_with_answer_markers": 9,
+  "retrieval_ok_with_markers": 1.0,
+  "no_marker_rows_pass_trivially": 3,
+  "by_reason": {
+   "out_of_index_provincial": {
+    "n": 3,
+    "ok": 3
+   },
+   "out_of_index_program": {
+    "n": 1,
+    "ok": 1
+   },
+   "personal_assessment": {
+    "n": 2,
+    "ok": 2
+   },
+   "legal_strategy": {
+    "n": 2,
+    "ok": 2
+   },
+   "not_on_page": {
+    "n": 4,
+    "ok": 4
+   }
+  }
+ },
+ "top1_score": {
+  "answerable_mean": 0.721,
+  "must_refuse_mean": 0.645
+ },
+ "target_recall@5": 0.7,
+ "passes_target": true,
+ "misses_at_5": [
+  {
+   "id": "vi02",
+   "question": "How do I extend my stay in Canada as a visitor?",
+   "expected": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/extend-stay/about.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/extend-stay/eligibility.html"
+   ],
+   "got_top3": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/prepare-arrival.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/visit-canada/extend-stay.html"
+   ]
+  },
+  {
+   "id": "fa01",
+   "question": "Who is eligible to sponsor a spouse or common-law partner to Canada?",
+   "expected": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/family-sponsorship/spouse-partner-children/eligibility.html"
+   ],
+   "got_top3": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/family-sponsorship/sponsor-parents-grandparents/eligibility/income.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/study-canada/work/help-your-spouse-common-law-partner-work-canada.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/work-canada/need-permit/sponsored-in-canada.html"
+   ]
+  },
+  {
+   "id": "fa04",
+   "question": "I became a permanent resident through spousal sponsorship 3 years ago. Can I sponsor a new spouse now?",
+   "expected": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/family-sponsorship/spouse-partner-children/eligibility.html"
+   ],
+   "got_top3": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/family-sponsorship/spouse-partner-children/who-you-can-sponsor.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/family-sponsorship/spouse-partner-children/who-you-can-sponsor.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/family-sponsorship/spouse-partner-children/who-you-can-sponsor.html"
+   ]
+  },
+  {
+   "id": "ci04",
+   "question": "Who has to take the Canadian citizenship test?",
+   "expected": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/adult-minor/who.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/adult-minor/after.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/become-canadian-citizen/citizenship-ceremony/when.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/become-canadian-citizen/eligibility/waiver/who.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/test/how-it-works.html"
+   ],
+   "got_top3": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/test/study.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/adult-minor/how/adult-forms-documents.html"
+   ]
+  },
+  {
+   "id": "ci05",
+   "question": "Do I need to have filed income taxes to apply for citizenship?",
+   "expected": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/adult-minor/who.html"
+   ],
+   "got_top3": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/become-canadian-citizen/eligibility/waiver/how.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/stateless/forms-documents.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/adult-minor/how/adult-forms-documents.html"
+   ]
+  },
+  {
+   "id": "ci06",
+   "question": "What topics does the citizenship test cover?",
+   "expected": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/adult-minor/who.html"
+   ],
+   "got_top3": [
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/test/study.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/test/study.html",
+    "https://www.canada.ca/en/immigration-refugees-citizenship/services/canadian-citizenship/test/results.html"
+   ]
+  }
+ ]
+}
