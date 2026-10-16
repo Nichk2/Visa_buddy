@@ -26,6 +26,11 @@ RUNS = {
     "goldV2": "790993006110",
     "retrievalGoldV2": "a6e8c331926c",
     "baselineGoldV2": "f851708cd6b9",
+    "trainV3": "90b5b188c81f",
+    "evalV3": "651fc2a78bb0",
+    "evalSafetyV3": "6ffd3b33d5f9",
+    "guardV3": "e4abbf736a8a",
+    "guardSafetyV3": "8470aa5d4e82",
     "train": "fc6ace1a5255",
     "adapterEval": "9b184da36903",
 }
@@ -95,6 +100,9 @@ def build():
                                      "goldV2": pct(r["baselineGoldV2"]["metrics"]["overall"]["fact_coverage"])},
         },
         "baselineGoldV2": r["baselineGoldV2"]["metrics"],
+        "v3": {"training": r["trainV3"]["metrics"], "gold": r["evalV3"]["metrics"]["overall"],
+               "safety": r["evalSafetyV3"]["metrics"]["overall"], "guardGold": r["guardV3"]["metrics"],
+               "guardSafety": r["guardSafetyV3"]["metrics"]},
         "training": r["train"] and r["train"]["metrics"],
         "adapter": r["adapterEval"] and r["adapterEval"]["metrics"],
     }

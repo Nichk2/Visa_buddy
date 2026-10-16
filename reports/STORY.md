@@ -11,10 +11,14 @@ which reads pinned runs from `runs/ledger.jsonl`. Nothing is typed in by hand.
 | 03 | The investigation | Clues it wasn't real: 0 test queries behind the 8/10; loss curve drawn from `2.5·exp(-0.01·step)` over 500 steps for a ~14-step run; "success" = a chunk came back; the index held 10 pages, 9 of them Express Entry; 50 template training rows, 16 with similarity ≥ 0.5; the served model was never the fine-tune (DialoGPT fallback) | `legacy_audit` run, `v1_v2_coverage.png`, original `training_metrics_*.png` | ready |
 | 04 | The honest number | Frozen 66-question gold set written from official pages. v1's own queries: right program 1/9 → 8/9. v2 retrieval recall@5 **81.5%**, not "100%" | `gold_freeze`, `eval_retrieval` runs, `v1_v2_old_queries.png`, `retrieval_recall5_by_program.png` | ready |
 | 05 | Rebuilding | One retriever, prompt and citation format for data, eval and serving; split by page URL so test pages never become training targets; duplicate-chunk bug (317 chunks from one page) | `chunk` runs (before/after dedupe), `corpus_chunks_by_program.png` | ready |
-| 06 | Baseline | Untuned Llama 3.1 8B with the serving prompt: citation, fact coverage, refusals, unsupported claims | `baseline` run | step 4 |
-| 07 | Training | QLoRA on Modal, real train/validation loss from `trainer_state.json`, checkpoint picked by fact coverage; next to the v1 formula curve | `train` run | step 6 |
-| 08 | Results | Fine-tune vs baseline on the same gold set, per program; failure rule: more citations but fewer facts = failed run | `adapterEval` run | step 7 |
-| 09 | Shipping | Colab-served FastAPI with the same index and prompt; `/health` true only when model and index loaded | serving notebook | step 8 |
+| 06 | Baseline | Untuned Llama 3.1 8B with the serving prompt: cites when it answers (0.98), but refuses 11% of answerable questions and covers 0.585 of facts | `baseline` + `regrade` runs | ready |
+| 07 | The grader that was wrong (twice) | Grader v1 marked "$7 CAD" vs "CAN$7" as a miss (gold_v2 + grader v2); then grader v2 gave full credit to "you don't have to stop working" against "You must stop working" (grader v3, polarity check, 11 of 13 first flags were false alarms, refined once, each pattern a unit test) | `gold_freeze` v2, `regrade` runs, `measurement_audit.png` | ready |
+| 08 | The teacher that failed its gate | Mistral Small 3.2 failed the pre-set gate because a refusal counted as a citation miss; same thresholds re-applied to corrected metric definitions, both runs kept | `teacher_gate` runs | ready |
+| 09 | Training | QLoRA on Modal; real 78-step loss curve next to v1's formula curve; epoch picked by validation fact coverage, not loss (epoch 2 had lower loss but more over-refusal) | `train` run, `v2_training_loss.png` | ready |
+| 10 | Results and a safety regression | v2: fact coverage 0.585 -> 0.662, over-refusal 0.111 -> 0.037, but it endorsed NOC misrepresentation (rf08); a held-out safety set written before any fix showed it was a one-off, and exposed two rule flips | `eval_answers:v2`, `safety_freeze`, safety runs | ready |
+| 11 | v3, and what didn't get fixed | v3 fixed rf08 (32/32 refusals) and kept the gains, but failed the pre-set 0-contradictions criterion: pg06 and t04 came from the base model's prior knowledge, not the data. Shipped with a guard that quotes the official sentence (catches pg06, misses t04) | `train:v3`, `eval_answers:v3`, `guard_eval` runs, `model_versions.png` | ready |
+| 12 | Shipping | FastAPI on Colab with the same index, prompt and guard; `/health` true only when model, adapter and index loaded; no silent fallback (v1 served DialoGPT) | `pipeline/serve.py`, notebook section 10 | ready to demo |
 
-Open weaknesses to state on the page, not hide: family (57%) and citizenship (62%)
-recall@5 are below the 70% target; some misses are gold labelling gaps fixed in gold_v2.
+Open weaknesses to state on the page, not hide: citizenship retrieval recall@5 is 0.62 (below the 0.7
+target); t04 ("you don't have to stop working") is still answered wrong and the guard doesn't catch it;
+the guard also adds a needless note to 2 correct answers.

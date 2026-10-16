@@ -143,3 +143,16 @@ def test_polarity_flips_for_training_rows():
     assert polarity_flips("No, you don't have to stop working if you lose your status.", src)
     assert not polarity_flips("Yes, you must stop working if you lose your status.", src)
     assert not polarity_flips("You must apply within 90 days of losing your status (Source: Restore, https://x.ca/a.html).", src)
+
+
+def test_guard_keeps_answer_and_quotes_source():
+    from pipeline.guard import NOTE, guard
+    from pipeline.prompt import REFUSAL_OUTPUT
+    hits = [{"url": U, "title": "PGWP", "text": "You can apply for a 3-year PGWP, even if your master's program was less than 2 years, as long as\n"
+                                                 "- your program was at least 8 months\n- you meet all other eligibility requirements"}]
+    ans = f"No, you can't apply for a 3-year PGWP if your master's program was less than 2 years ({U})."
+    shown, flags = guard(ans, hits)
+    assert flags and shown.startswith(ans) and NOTE in shown and "at least 8 months" in shown  # continuation lines kept
+    assert guard(REFUSAL_OUTPUT, hits) == (REFUSAL_OUTPUT, [])  # refusals untouched
+    ok = f"You can apply for a 3-year PGWP even if your master's program was less than 2 years ({U})."
+    assert guard(ok, hits) == (ok, [])
