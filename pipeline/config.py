@@ -14,7 +14,8 @@ GOLD_V1 = EVAL_DIR / "gold_v1.jsonl"
 GOLD_V2 = EVAL_DIR / "gold_v2.jsonl"
 SAFETY_V1 = EVAL_DIR / "safety_v1.jsonl"
 RULES_V1 = EVAL_DIR / "rules_v1.jsonl"
-GOLD_FILES = [GOLD_V1, GOLD_V2, SAFETY_V1, RULES_V1]  # training holds out the source pages (and questions) of every eval file
+RULES_YES_V1 = EVAL_DIR / "rules_yes_v1.jsonl"
+GOLD_FILES = [GOLD_V1, GOLD_V2, SAFETY_V1, RULES_V1, RULES_YES_V1]  # training holds out the source pages (and questions) of every eval file
 
 # Official IRCC pages only: answers must come from canada.ca, never forums or third-party sites.
 ALLOWED_HOST = "www.canada.ca"
