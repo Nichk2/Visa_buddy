@@ -87,6 +87,28 @@ lean on rules that forbid or restrict.
   **Criterion 6 met.** Known loss: vi07 (visitor visa fee) drops from rank 4 to 6 under hybrid;
   left as is rather than tuned to one test question.
 
+## Phase 3 results: bake-off (2026-10-17)
+
+Untuned, v4 pipeline, hybrid retrieval on corpus_v2, vLLM on Modal (L4). Run 1 was invalid (quote
+verifier bug: multi-line and plain-string quotes rejected); fixed and re-run.
+
+| | Qwen3-4B-Instruct-2507 | Phi-4-mini-instruct | SmolLM3-3B |
+|---|---|---|---|
+| Fact coverage gold / rules / yes | **0.744 / 0.609 / 0.727** | 0.167 / 0.087 / 0.545 | 0.349 / 0.304 / 0.000 |
+| Wrong rules shown | 4 (2 grader false alarms) | 0 | 2 |
+| Must-refuse refused /32 | 31 | 32 | 18 |
+| Over-refusal gold / rules | 0.130 / 0.174 | 0.778 / 0.783 | 0.519 / 0.522 |
+
+**Chosen: Qwen3-4B-Instruct-2507.** Untuned it already passes gold fact coverage (0.744 vs v3's
+0.671). Its real errors are one new kind: a real quote from the wrong part of the right page:
+r03 (the expired COVID distance-learning policy), y02 (non-DLI section for a DLI-to-DLI transfer),
+rf10 ("Resume citizenship" fee given as the new-application fee). Next: date-aware quote filter
+(code), grader v3.1 for two false-alarm patterns (ee06, fa05), then fine-tuning for quote selection
+and over-refusal.
+
 ## Changes to this plan
+
+- 2026-10-17: phase 4's pipeline was built before the bake-off (phase 3), because a model has to be
+  judged inside the pipeline it will run in.
 
 (none yet)

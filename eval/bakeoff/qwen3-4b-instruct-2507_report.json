@@ -1,6 +1,6 @@
 {
  "model": "Qwen/Qwen3-4B-Instruct-2507",
- "wrong_rules_shown": 3,
+ "wrong_rules_shown": 4,
  "must_refuse_refused": 31,
  "median_latency_s_gpu": 0.291,
  "by_set": {
@@ -10,22 +10,22 @@
    "n_answerable": 54,
    "n_must_refuse": 12,
    "cite_when_answering": 1.0,
-   "over_refusal_rate": 0.407,
-   "abstained_answer_not_in_context": 1,
-   "contradicts_source": 0.0,
+   "over_refusal_rate": 0.13,
+   "abstained_answer_not_in_context": 0,
+   "contradicts_source": 0.037,
    "wrong_verdict_rate": 0.0,
    "answer_in_context_rate": 0.944,
-   "citation_hit": 0.574,
-   "fact_coverage": 0.395,
-   "refusal_correct": 0.636,
+   "citation_hit": 0.87,
+   "fact_coverage": 0.744,
+   "refusal_correct": 0.879,
    "refusal_correct_on_must_refuse": 0.917,
-   "false_refusal_rate": 0.426,
+   "false_refusal_rate": 0.13,
    "unsupported": 0.0,
    "status": {
-    "refused_no_quotes": 32,
-    "answered": 31,
-    "quotes_only": 1,
-    "refused_policy": 2
+    "answered": 47,
+    "refused_no_quotes": 16,
+    "refused_policy": 2,
+    "quotes_only": 1
    }
   },
   "safety_v1": {
@@ -34,21 +34,22 @@
    "n_answerable": 6,
    "n_must_refuse": 20,
    "cite_when_answering": 1.0,
-   "over_refusal_rate": 0.333,
+   "over_refusal_rate": 0.0,
    "abstained_answer_not_in_context": 0,
-   "contradicts_source": 0.167,
+   "contradicts_source": 0.0,
    "wrong_verdict_rate": 0.0,
    "answer_in_context_rate": 1.0,
-   "citation_hit": 0.667,
-   "fact_coverage": 0.333,
-   "refusal_correct": 0.923,
+   "citation_hit": 1.0,
+   "fact_coverage": 1.0,
+   "refusal_correct": 1.0,
    "refusal_correct_on_must_refuse": 1.0,
-   "false_refusal_rate": 0.333,
+   "false_refusal_rate": 0.0,
    "unsupported": 0.0,
    "status": {
     "refused_policy": 11,
-    "refused_no_quotes": 11,
-    "answered": 4
+    "refused_no_quotes": 9,
+    "answered": 5,
+    "quotes_only": 1
    }
   },
   "rules_v1": {
@@ -57,20 +58,21 @@
    "n_answerable": 23,
    "n_must_refuse": 0,
    "cite_when_answering": 1.0,
-   "over_refusal_rate": 0.435,
+   "over_refusal_rate": 0.174,
    "abstained_answer_not_in_context": 2,
    "contradicts_source": 0.0,
    "wrong_verdict_rate": 0.043,
    "answer_in_context_rate": 0.87,
-   "citation_hit": 0.478,
-   "fact_coverage": 0.348,
-   "refusal_correct": 0.478,
+   "citation_hit": 0.739,
+   "fact_coverage": 0.609,
+   "refusal_correct": 0.739,
    "refusal_correct_on_must_refuse": null,
-   "false_refusal_rate": 0.522,
+   "false_refusal_rate": 0.261,
    "unsupported": 0.0,
    "status": {
-    "refused_no_quotes": 11,
-    "answered": 11,
+    "answered": 14,
+    "quotes_only": 3,
+    "refused_no_quotes": 5,
     "refused_policy": 1
    }
   },
@@ -80,20 +82,21 @@
    "n_answerable": 11,
    "n_must_refuse": 0,
    "cite_when_answering": 1.0,
-   "over_refusal_rate": 0.273,
-   "abstained_answer_not_in_context": 1,
+   "over_refusal_rate": 0.091,
+   "abstained_answer_not_in_context": 0,
    "contradicts_source": 0.0,
    "wrong_verdict_rate": 0.091,
    "answer_in_context_rate": 0.909,
-   "citation_hit": 0.636,
-   "fact_coverage": 0.455,
-   "refusal_correct": 0.636,
+   "citation_hit": 0.909,
+   "fact_coverage": 0.727,
+   "refusal_correct": 0.909,
    "refusal_correct_on_must_refuse": null,
-   "false_refusal_rate": 0.364,
+   "false_refusal_rate": 0.091,
    "unsupported": 0.0,
    "status": {
-    "answered": 7,
-    "refused_no_quotes": 4
+    "answered": 9,
+    "refused_no_quotes": 1,
+    "quotes_only": 1
    }
   }
  }
