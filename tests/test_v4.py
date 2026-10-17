@@ -37,3 +37,12 @@ def test_run_batch_paths():
     assert r[0]["response"].startswith("No.") and "Official wording:" in r[0]["response"] and U in r[0]["response"]
     assert r[1]["response"] == r[2]["response"] == REFUSAL_OUTPUT
     assert "Yes" not in r[4]["response"] and "official sources say" in r[4]["response"]  # wrong answer never shown
+
+
+def test_multiline_and_string_quotes():
+    hits = [{"url": U, "title": "Express Entry", "text": "There are 3 immigration programs managed through Express Entry:\n"
+             "- Canadian Experience Class\n- Federal Skilled Worker Program\n- Federal Skilled Trades Program\nOther text here that is long enough."}]
+    q = "There are 3 immigration programs managed through Express Entry: - Canadian Experience Class - Federal Skilled Worker Program - Federal Skilled Trades Program"
+    for raw in ([{"source": 1, "text": q}], [q]):  # object form and plain-string form (Phi-4-mini)
+        got = verify_quotes(raw, hits)
+        assert got and "Federal Skilled Trades Program" in got[0]["text"] and "Other text" not in got[0]["text"]

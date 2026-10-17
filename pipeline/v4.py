@@ -61,29 +61,52 @@ def _parse_json(text):
         return None
 
 
-def _sentences(text):
+MAX_WINDOW = 15  # a quote may span a lead-in plus a long bullet list (sp06 lists 5+ items)
+
+
+def _units(text):
+    """Candidate passages a quote can come from: each sentence, and runs of 1-8 consecutive
+    lines. The first bake-off compared quotes with single lines only and rejected correct
+    quotes that ran across a bullet list ("...managed through Express Entry: - CEC - FSWP")."""
+    lines = [l.strip().lstrip("-").strip() for l in text.splitlines() if l.strip()]
     out = []
-    for line in text.splitlines():
-        line = line.strip().lstrip("-").strip()
+    for line in lines:
         out += [s.strip() for s in re.split(r"(?<=[.!?])\s+", line) if len(s.strip()) > 15]
+    for n in range(2, MAX_WINDOW + 1):
+        out += [" ".join(lines[i:i + n]) for i in range(len(lines) - n + 1)]
     return out
 
 
+def _quote_text(q):
+    """Models return quotes as {"text": ...} objects or as plain strings (Phi-4-mini did)."""
+    if isinstance(q, str):
+        return q
+    if isinstance(q, dict):
+        return str(q.get("text") or q.get("quote") or "")
+    return ""
+
+
 def verify_quotes(raw_quotes, hits):
-    """Map each model quote to the real source sentence it came from (verbatim from canada.ca).
-    Quotes that don't match any sentence of the retrieved pages closely enough are dropped."""
+    """Map each model quote to the real source passage it came from (verbatim from canada.ca).
+    Quotes that don't match any passage of the retrieved pages closely enough are dropped.
+    Among passages that match, the shortest wins, so the user sees no more than was quoted."""
     kept, seen = [], set()
     for q in raw_quotes or []:
-        if not isinstance(q, dict) or not str(q.get("text", "")).strip():
+        qt = norm(_quote_text(q))
+        if len(qt) < 6:  # table rows are short ("1 $15,263" from the proof-of-funds table)
             continue
-        qt = norm(str(q["text"]))
         best, score = None, 0.0
         for h in hits:
-            for s in _sentences(h["text"]):
-                ns = norm(s)
-                r = 1.0 if qt in ns or ns in qt and len(ns) > 0.6 * len(qt) else SequenceMatcher(None, qt, ns).ratio()
-                if r > score:
-                    best, score = (s, h), r
+            for u in _units(h["text"]):
+                nu = norm(u)
+                if qt in nu and len(nu) <= 1.5 * len(qt) + 40:
+                    r = 1.0
+                elif nu in qt and len(nu) > 0.6 * len(qt):
+                    r = 0.95
+                else:
+                    r = SequenceMatcher(None, qt, nu).ratio()
+                if r > score or (r == score and best and len(u) < len(best[0])):
+                    best, score = (u, h), r
         if best and score >= MIN_QUOTE_MATCH and best[0] not in seen:
             seen.add(best[0])
             kept.append({"text": best[0], "title": best[1]["title"], "url": best[1]["url"], "match": round(score, 3)})
