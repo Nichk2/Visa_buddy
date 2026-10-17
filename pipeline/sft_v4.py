@@ -164,14 +164,18 @@ def items():
 
 
 # ---------------------------------------------------------------- gate
-def gate():
+def _sfx(teacher):
+    return "" if teacher == "mistral-small-3.2" else f"_{teacher}"
+
+
+def gate(teacher: str = "mistral-small-3.2"):
     from .bakeoff import SETS
     from .eval_answers import summarize
     from .grade import grade
     items_ = {(r["set"], r["id"]): r for r in _jsonl(EVAL_DIR / "bakeoff" / "items.jsonl")}
     gold = {(s, g["id"]): g for s in SETS for g in _jsonl(EVAL_DIR / f"{s}.jsonl")}
     rows = []
-    for r in _jsonl(WORK / "teacher_gate_raw.jsonl"):
+    for r in _jsonl(WORK / f"teacher_gate_raw{_sfx(teacher)}.jsonl"):
         key = (r["set"], r["id"])
         g = gold[key]
         rows.append({**r, "program": g["program"], "must_refuse": g["must_refuse"], "grade": grade(r["response"], items_[key]["hits"], g)})
@@ -182,12 +186,13 @@ def gate():
     checks = {"wrong_rules_shown": wrong <= GATE["wrong_rules_shown_max"], "must_refuse": refused >= GATE["must_refuse_min"],
               "gold_fact_coverage": s["fact_coverage"] >= GATE["gold_fact_coverage_min"],
               "gold_over_refusal": s["over_refusal_rate"] <= GATE["gold_over_refusal_max"]}
-    rep = {"thresholds": GATE, "wrong_rules_shown": wrong, "must_refuse_refused": refused, "gold": s,
+    rep = {"teacher": teacher, "thresholds": GATE, "wrong_rules_shown": wrong, "must_refuse_refused": refused, "gold": s,
            "checks": checks, "passed": all(checks.values())}
-    (WORK / "teacher_gate_report.json").write_text(json.dumps(rep, indent=1))
+    (WORK / f"teacher_gate_report{_sfx(teacher)}.json").write_text(json.dumps(rep, indent=1))
     print(json.dumps({k: rep[k] for k in ("wrong_rules_shown", "must_refuse_refused", "checks", "passed")}, indent=1),
           "\ngold fact coverage", s["fact_coverage"], "over-refusal", s["over_refusal_rate"])
-    tracking.record("teacher_gate:v4", inputs=[WORK / "teacher_gate_raw.jsonl"], outputs=[WORK / "teacher_gate_report.json"],
+    tracking.record("teacher_gate:v4", inputs=[WORK / f"teacher_gate_raw{_sfx(teacher)}.jsonl"],
+                    outputs=[WORK / f"teacher_gate_report{_sfx(teacher)}.json"],
                     config={"thresholds": GATE, "pipeline": "v4"}, metrics=rep)
     return rep["passed"]
 
@@ -202,15 +207,15 @@ def _grounded(answer, quotes):
     return sum(t in ctx for t in toks) / len(toks) if toks else 0.0
 
 
-def build():
+def build(teacher: str = "mistral-small-3.2"):
     from .v4 import EXTRACT_SYSTEM, ANSWER_SYSTEM, answer_messages, extract_messages
-    rep = json.loads((WORK / "teacher_gate_report.json").read_text())
+    rep = json.loads((WORK / f"teacher_gate_report{_sfx(teacher)}.json").read_text())
     if not rep["passed"]:
         sys.exit("teacher gate failed: its rows are not used")
     items_ = {r["item_id"]: r for r in _jsonl(WORK / "pipeline_items.jsonl")}
     ev_urls = {u for r in _eval_rows() for u in r["source_urls"]}
     drops, ext_rows, ans_rows = Counter(), [], []
-    for r in _jsonl(WORK / "teacher_pipeline_raw.jsonl"):
+    for r in _jsonl(WORK / f"teacher_pipeline_raw{_sfx(teacher)}.jsonl"):
         it = items_[r["item_id"]]
         assert not {h["url"] for h in it["hits"]} & ev_urls, "eval page in a training context"
         base = {"item_id": it["item_id"], "kind": it["kind"], "split": it["split"], "program": it["program"],
@@ -261,9 +266,10 @@ def build():
     card = _card(train, valid, drops)
     (SFT / "DATA_CARD.md").write_text(card["md"])
     print(card["md"].split("## 20 random")[0])
-    tracking.record("sft_build:v4", inputs=[WORK / "teacher_pipeline_raw.jsonl", WORK / "pipeline_items.jsonl"],
+    tracking.record("sft_build:v4", inputs=[WORK / f"teacher_pipeline_raw{_sfx(teacher)}.jsonl", WORK / "pipeline_items.jsonl"],
                     outputs=[SFT / "train.jsonl", SFT / "valid.jsonl", SFT / "DATA_CARD.md"],
-                    config={"refusal_share": REFUSAL_SHARE, "grounded_min": GROUNDED_MIN, "seed": SEED}, metrics=card["metrics"])
+                    config={"teacher": teacher, "refusal_share": REFUSAL_SHARE, "grounded_min": GROUNDED_MIN, "seed": SEED},
+                    metrics=card["metrics"])
 
 
 def _card(train, valid, drops):
@@ -293,4 +299,8 @@ def _card(train, valid, drops):
 
 
 if __name__ == "__main__":
-    {"select": select, "items": items, "gate": gate, "build": build}[sys.argv[1]]()
+    cmd, arg = sys.argv[1], (sys.argv[2] if len(sys.argv) > 2 else None)
+    if cmd in ("gate", "build"):
+        {"gate": gate, "build": build}[cmd](arg or "mistral-small-3.2")
+    else:
+        {"select": select, "items": items}[cmd]()
