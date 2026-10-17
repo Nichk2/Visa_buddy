@@ -56,6 +56,23 @@ rules* to *reading the sources faithfully*.
 Comparisons are system to system: if v4 changes the corpus or retrieval, v3 is re-scored on
 the same corpus as well, and both results are reported.
 
+## Sealed final exam (frozen 2026-10-17, before fine-tuning)
+
+`eval/final_exam_v1.jsonl` (sha256 `0a3c04b8ea9b...`): 25 hand-written questions from pages added in
+corpus_v2 (never in any training input, never used to shape a fix): 19 rule/fact questions (3 on the
+2026 Express Entry points changes) and 6 must-refuse. Several fixes so far were made after reading
+failures on the other four sets, so those sets are no longer a clean exam. This one is scored
+**exactly once**, at the end of v4, with the shipped system on the Mac, and never used for decisions.
+
+| Final-exam criterion | v4 must reach |
+|---|---|
+| Wrong rules shown | 0 |
+| Must-refuse refused | 6 / 6 |
+| Fact coverage (19 answerable) | >= 0.60 |
+| Refused although the answer is in the sources | <= 0.10 (2 of 19; small set) |
+
+The result is reported as measured, pass or fail.
+
 ## Phases
 
 0. Freeze held-out rule sets and score the earlier models on them. **Done** (rules_v1, rules_yes_v1).
