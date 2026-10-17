@@ -44,13 +44,13 @@ def prepare():
                     metrics={"questions": len(rows), "per_set": dict(Counter(r["set"] for r in rows))})
 
 
-def grade_all():
+def grade_all(only: str = ""):
     from .eval_answers import summarize
     from .grade import grade
     items = {(r["set"], r["id"]): r for r in map(json.loads, (OUT / "items.jsonl").read_text().splitlines())}
     gold = {(s, g["id"]): g for s in SETS for g in map(json.loads, (EVAL_DIR / f"{s}.jsonl").read_text().splitlines())}
     table = {}
-    for m in MODELS:
+    for m in [m for m in MODELS if not only or only in m]:
         raw_path = OUT / f"{slug(m)}_raw.jsonl"
         if not raw_path.exists():
             print("missing", raw_path)
@@ -95,4 +95,7 @@ def print_table(table):
 
 
 if __name__ == "__main__":
-    {"prepare": prepare, "grade": grade_all}[sys.argv[1]]()
+    if sys.argv[1] == "grade":
+        grade_all(sys.argv[2] if len(sys.argv) > 2 else "")
+    else:
+        prepare()

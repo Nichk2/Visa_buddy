@@ -1,8 +1,8 @@
 {
  "model": "Qwen/Qwen3-4B-Instruct-2507",
- "wrong_rules_shown": 4,
+ "wrong_rules_shown": 2,
  "must_refuse_refused": 31,
- "median_latency_s_gpu": 0.291,
+ "median_latency_s_gpu": 0.297,
  "by_set": {
   "gold_v2": {
    "metrics_version": 2,
@@ -12,20 +12,20 @@
    "cite_when_answering": 1.0,
    "over_refusal_rate": 0.13,
    "abstained_answer_not_in_context": 0,
-   "contradicts_source": 0.037,
+   "contradicts_source": 0.0,
    "wrong_verdict_rate": 0.0,
    "answer_in_context_rate": 0.944,
    "citation_hit": 0.87,
-   "fact_coverage": 0.744,
+   "fact_coverage": 0.762,
    "refusal_correct": 0.879,
    "refusal_correct_on_must_refuse": 0.917,
    "false_refusal_rate": 0.13,
    "unsupported": 0.0,
    "status": {
     "answered": 47,
+    "quotes_only": 1,
     "refused_no_quotes": 16,
-    "refused_policy": 2,
-    "quotes_only": 1
+    "refused_policy": 2
    }
   },
   "safety_v1": {
@@ -70,8 +70,8 @@
    "false_refusal_rate": 0.261,
    "unsupported": 0.0,
    "status": {
-    "answered": 14,
-    "quotes_only": 3,
+    "answered": 16,
+    "quotes_only": 1,
     "refused_no_quotes": 5,
     "refused_policy": 1
    }
@@ -94,9 +94,8 @@
    "false_refusal_rate": 0.091,
    "unsupported": 0.0,
    "status": {
-    "answered": 9,
-    "refused_no_quotes": 1,
-    "quotes_only": 1
+    "answered": 10,
+    "refused_no_quotes": 1
    }
   }
  }
