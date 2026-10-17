@@ -15,8 +15,10 @@ So the facts shown to the user must be the official sentences themselves, checke
 The model is a callable taking a batch of chat conversations and returning texts, so the same
 code runs with vLLM on Modal (bake-off) and MLX on the Mac (the shipped app).
 """
+import calendar
 import json
 import re
+from datetime import date
 from difflib import SequenceMatcher
 
 from .grade import _number_in, _numbers, URL_RE
@@ -73,7 +75,9 @@ def _units(text):
     for line in lines:
         out += [s.strip() for s in re.split(r"(?<=[.!?])\s+", line) if len(s.strip()) > 15]
     for n in range(2, MAX_WINDOW + 1):
-        out += [" ".join(lines[i:i + n]) for i in range(len(lines) - n + 1)]
+        # Joined with line breaks, not spaces: merging bullets into one run-on sentence put the
+        # "can't" of one bullet in the same clause as the next one and confused the polarity checks.
+        out += ["\n".join(lines[i:i + n]) for i in range(len(lines) - n + 1)]
     return out
 
 
@@ -113,6 +117,40 @@ def verify_quotes(raw_quotes, hits):
     return kept
 
 
+# --- expired quotes -------------------------------------------------------------------
+# A current page can still describe a policy that has ended. In the bake-off Qwen quoted
+# "You can complete up to 100% of your studies online from outside Canada between March 2020
+# and August 31, 2022, because of a temporary COVID-19 policy" and answered "Yes" (rules r03).
+# A quote is expired when it describes a temporary policy/measure AND gives an end date before
+# today. Rules about past *applications* ("if you applied before November 1, 2024, you're
+# exempt") don't match: they carry no temporary-policy wording and still apply today.
+_MONTHS = "January|February|March|April|May|June|July|August|September|October|November|December"
+_DATE = rf"(?:{_MONTHS})(?:\s+\d{{1,2}},?)?\s+20\d\d"
+_TEMP = re.compile(r"\b(temporary|public policy|measures?|pandemic|covid)\b", re.I)
+_END = re.compile(rf"(?:until|ended(?: on)?|expired(?: on)?|in place until|changed as of|and)\s+({_DATE})", re.I)
+
+
+def _to_date(text):
+    m = re.match(rf"({_MONTHS})(?:\s+(\d{{1,2}}),?)?\s+(20\d\d)", text.strip(), re.I)
+    month = [x.lower() for x in _MONTHS.split("|")].index(m.group(1).lower()) + 1
+    year = int(m.group(3))
+    day = int(m.group(2)) if m.group(2) else calendar.monthrange(year, month)[1]
+    return date(year, month, day)
+
+
+def is_expired(text, today=None):
+    today = today or date.today()
+    for sent in re.split(r"(?<=[.!?])\s+|\n", text):
+        if _TEMP.search(sent) and any(_to_date(m.group(1)) < today for m in _END.finditer(sent)):
+            return True
+    return False
+
+
+def _without_expired(hits, today=None):
+    """The same sources with expired lines removed, for the one retry."""
+    return [{**h, "text": "\n".join(l for l in h["text"].splitlines() if not is_expired(l, today))} for h in hits]
+
+
 def verify_answer(answer, quotes):
     """Return the list of problems; empty means the answer can be shown."""
     qtext = "\n".join(q["text"] for q in quotes)
@@ -122,29 +160,47 @@ def verify_answer(answer, quotes):
 
 
 def render(answer, quotes, status):
-    cites = "\n".join(f'- "{q["text"]}" (Source: {q["title"]}, {q["url"]})' for q in quotes)
+    cites = "\n".join('- "' + q["text"].replace("\n", "\n  ") + f'" (Source: {q["title"]}, {q["url"]})' for q in quotes)
     if status == "answered":
         return f"{answer.strip()}\n\nOfficial wording:\n{cites}"
     return f"I can't summarize this safely, but here is what the official sources say:\n{cites}"
 
 
-def run_batch(questions, hits_list, chat, max_tokens=(400, 200)):
+def run_batch(questions, hits_list, chat, max_tokens=(400, 200), today=None):
     """Run the pipeline for many questions at once. `chat(list_of_conversations, max_tokens)`
     returns one text per conversation (batched: one vLLM call per step on Modal)."""
     ext_raw = chat([extract_messages(q, h) for q, h in zip(questions, hits_list)], max_tokens[0])
-    results, to_answer = [], []
+    results, retry = [], []
     for i, (q, hits, raw) in enumerate(zip(questions, hits_list, ext_raw)):
         obj = _parse_json(raw) or {}
-        r = {"question": q, "extract_raw": raw, "quotes": [], "answer_raw": None, "problems": []}
+        r = {"question": q, "extract_raw": raw, "quotes": [], "answer_raw": None, "problems": [], "expired_dropped": []}
         if obj.get("refuse") is True:
             r.update(status="refused_policy", response=REFUSAL_OUTPUT)
         else:
-            r["quotes"] = verify_quotes(obj.get("quotes"), hits)
-            if not r["quotes"]:
-                r.update(status="refused_no_quotes", response=REFUSAL_OUTPUT)
-            else:
-                to_answer.append(i)
+            quotes = verify_quotes(obj.get("quotes"), hits)
+            r["expired_dropped"] = [q_["text"] for q_ in quotes if is_expired(q_["text"], today)]
+            r["quotes"] = [q_ for q_ in quotes if not is_expired(q_["text"], today)]
+            if not r["quotes"] and r["expired_dropped"]:
+                retry.append(i)  # only expired passages were quoted: try once without them
         results.append(r)
+    if retry:
+        clean = {i: _without_expired(hits_list[i], today) for i in retry}
+        raw2 = chat([extract_messages(questions[i], clean[i]) for i in retry], max_tokens[0])
+        for i, raw in zip(retry, raw2):
+            obj = _parse_json(raw) or {}
+            results[i]["extract_raw_retry"] = raw
+            if obj.get("refuse") is True:
+                results[i].update(status="refused_policy", response=REFUSAL_OUTPUT)
+            else:
+                results[i]["quotes"] = [q_ for q_ in verify_quotes(obj.get("quotes"), clean[i]) if not is_expired(q_["text"], today)]
+    to_answer = []
+    for i, r in enumerate(results):
+        if "status" in r:
+            continue
+        if r["quotes"]:
+            to_answer.append(i)
+        else:
+            r.update(status="refused_no_quotes", response=REFUSAL_OUTPUT)
     if to_answer:
         ans_raw = chat([answer_messages(questions[i], results[i]["quotes"]) for i in to_answer], max_tokens[1])
         for i, raw in zip(to_answer, ans_raw):

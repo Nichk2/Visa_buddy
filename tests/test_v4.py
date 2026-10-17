@@ -46,3 +46,37 @@ def test_multiline_and_string_quotes():
     for raw in ([{"source": 1, "text": q}], [q]):  # object form and plain-string form (Phi-4-mini)
         got = verify_quotes(raw, hits)
         assert got and "Federal Skilled Trades Program" in got[0]["text"] and "Other text" not in got[0]["text"]
+
+
+def test_expired_quotes():
+    from datetime import date
+    from pipeline.v4 import is_expired
+    today = date(2026, 10, 17)
+    assert is_expired("You can complete up to 100% of your studies online from outside Canada between March 2020 and "
+                      "August 31, 2022, because of a temporary COVID-19 policy.", today)
+    assert is_expired("This temporary policy was in place until August 31, 2022.", today)
+    assert not is_expired("If you submitted your PGWP application before November 1, 2024, you're exempt from the new requirements.", today)
+    assert not is_expired("We will not accept new forms until further notice.", today)
+    assert not is_expired("The temporary measures have been extended until November 27, 2026.", today)  # still in force
+
+
+def test_expired_only_quotes_get_one_retry_without_them():
+    from datetime import date
+    hits = [{"url": U, "title": "PGWP", "text": "You can complete up to 100% of your studies online from outside Canada between March 2020 "
+             "and August 31, 2022, because of a temporary COVID-19 policy.\nYou must complete at least 50% of your program within Canada."}]
+    old = '{"quotes": [{"source": 1, "text": "You can complete up to 100% of your studies online from outside Canada between March 2020 and August 31, 2022, because of a temporary COVID-19 policy."}]}'
+    new = '{"quotes": [{"source": 1, "text": "You must complete at least 50% of your program within Canada."}]}'
+    seen = []
+
+    def chat(convs, max_tokens):
+        seen.append(convs)
+        return {1: [old], 2: [new], 3: ["No. You must complete at least 50% of your program within Canada."]}[len(seen)]
+    r = run_batch(["Online from abroad, PGWP?"], [hits], chat, today=date(2026, 10, 17))[0]
+    assert r["expired_dropped"] and r["status"] == "answered" and r["response"].startswith("No.")
+    assert "August 31, 2022" not in seen[1][0][1]["content"]  # the retry never saw the expired line
+
+
+def test_multiline_quote_keeps_line_breaks():
+    hits = [{"url": U, "title": "Funds", "text": "- you can't use equity on real property as proof of settlement funds\n- you can't borrow this money from another person"}]
+    q = verify_quotes(["you can't use equity on real property as proof of settlement funds you can't borrow this money from another person"], hits)
+    assert q and "\n" in q[0]["text"]

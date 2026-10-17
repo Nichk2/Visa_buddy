@@ -106,6 +106,13 @@ rf10 ("Resume citizenship" fee given as the new-application fee). Next: date-awa
 (code), grader v3.1 for two false-alarm patterns (ee06, fa05), then fine-tuning for quote selection
 and over-refusal.
 
+Follow-up (2026-10-17): the ee06/fa05 "contradictions" were not a grader bug. The pipeline joined
+multi-line quotes with spaces, merging two bullets into one clause; quotes now keep their line
+breaks, and both answers grade correct (offline re-render of the saved outputs). Expired quotes:
+a quote describing a temporary policy with an end date before today is dropped, and the model gets
+one retry without those passages. On the saved outputs it flags exactly one quote (r03). Both
+changes need a model re-run to be measured; they will be measured with the next model run.
+
 ## Changes to this plan
 
 - 2026-10-17: phase 4's pipeline was built before the bake-off (phase 3), because a model has to be
