@@ -53,7 +53,7 @@ def _messages(row, with_answer):  # same system/user messages the chat server bu
 
 @app.function(gpu=GPU, timeout=3 * 60 * 60, secrets=[modal.Secret.from_name("hf-secret")],
               volumes={"/root/.cache/huggingface": hf_cache, "/out": out_vol})
-def train(train_rows: list, valid_rows: list, smoke: bool = False, version: str = "v2") -> dict:
+def train(train_rows: list, valid_rows: list, smoke: bool = False, version: str = "v2", base: str = BASE) -> dict:
     import os
     import shutil
 
@@ -64,14 +64,14 @@ def train(train_rows: list, valid_rows: list, smoke: bool = False, version: str 
     from transformers import (AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, Trainer,
                               TrainerCallback, TrainingArguments)
 
-    from pipeline.valid_metrics import score_valid
+    from pipeline.valid_metrics import score_valid, score_valid_v4
 
     hp = {**HP, **({"epochs": 1, "max_new_tokens_valid": 32} if smoke else {})}
     token = next((os.environ[k] for k in ("HF_TOKEN", "HUGGING_FACE_HUB_TOKEN", "HUGGINGFACE_TOKEN", "HF_API_TOKEN")
                   if os.environ.get(k)), None)
     assert token, "hf-secret has no HF token under a known key"
     torch.manual_seed(HP["seed"])  # reproducible LoRA init and data order
-    tok = AutoTokenizer.from_pretrained(BASE, token=token)
+    tok = AutoTokenizer.from_pretrained(base, token=token)
     tok.pad_token = tok.pad_token or tok.eos_token
 
     def encode(row):
@@ -100,7 +100,7 @@ def train(train_rows: list, valid_rows: list, smoke: bool = False, version: str 
         return {"input_ids": ids, "labels": lab, "attention_mask": att}
 
     model = AutoModelForCausalLM.from_pretrained(
-        BASE, token=token, device_map={"": 0}, dtype=torch.bfloat16,
+        base, token=token, device_map={"": 0}, dtype=torch.bfloat16,
         quantization_config=BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
                                                bnb_4bit_compute_dtype=torch.bfloat16, bnb_4bit_use_double_quant=True))
     model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True,
@@ -127,7 +127,9 @@ def train(train_rows: list, valid_rows: list, smoke: bool = False, version: str 
     class ValidGen(TrainerCallback):
         def on_epoch_end(self, args, state, control, **kw):
             outs = generate_valid()
-            s = score_valid(valid_rows, outs)
+            s = (score_valid_v4 if version == "v4" else score_valid)(valid_rows, outs)
+            if version == "v4":
+                s["fact_coverage"] = s["v4_valid_score"]  # v4 selects on the combined score (fixed before training)
             ep = round(state.epoch)
             d = f"/tmp/ckpt-epoch{ep}"
             model.save_pretrained(d)
@@ -159,7 +161,7 @@ def train(train_rows: list, valid_rows: list, smoke: bool = False, version: str 
         for e in epoch_scores:
             for r, o in zip(valid_rows, e["outputs"]):
                 f.write(json.dumps({"epoch": e["epoch"], "id": r["id"], "kind": r["kind"], "output": o}, ensure_ascii=False) + "\n")
-    meta = {"base": BASE, "gpu": GPU, "hp": hp, "smoke": smoke, "data_version": version, "trainable_params": trainable,
+    meta = {"base": base, "gpu": GPU, "hp": hp, "smoke": smoke, "data_version": version, "trainable_params": trainable,
             "versions": {"torch": torch.__version__, "transformers": transformers.__version__, "peft": peft.__version__},
             "received_sha256": {"train": _digest(train_rows), "valid": _digest(valid_rows)},
             "rows": {"train": len(train_ds), "valid": len(valid_ds), "train_dropped_too_long": train_dropped,
@@ -177,7 +179,8 @@ def fetch(version: str = "v2") -> dict:
 
 
 @app.local_entrypoint()
-def main(fetch_only: bool = False, smoke: bool = False, data: str = "v2"):
+def main(fetch_only: bool = False, smoke: bool = False, data: str = "v2", base: str = BASE):
+    # v4: --data v4 --base Qwen/Qwen3-4B-Instruct-2507 (the bake-off winner)
     # --data v3 trains on visa_buddy_data/sft_v3 and writes models/v3; v2's adapter is untouched
     sft = ROOT / "visa_buddy_data" / ("sft" if data == "v2" else f"sft_{data}")
     train_rows = [json.loads(l) for l in (sft / "train.jsonl").read_text().splitlines() if l.strip()]
@@ -185,7 +188,7 @@ def main(fetch_only: bool = False, smoke: bool = False, data: str = "v2"):
     print(f"training on {len(train_rows)} rows, validating on {len(valid_rows)} ({GPU})", flush=True)
     if smoke:  # plumbing check only: same code and model, tiny data, output kept apart
         train_rows, valid_rows = train_rows[:8], valid_rows[:2]
-    res = fetch.remote(data) if fetch_only else train.remote(train_rows, valid_rows, smoke, data)
+    res = fetch.remote(data) if fetch_only else train.remote(train_rows, valid_rows, smoke, data, base)
     assert res["meta"]["received_sha256"] == {"train": _digest(train_rows), "valid": _digest(valid_rows)}, \
         "job trained on different data"
     dest = ROOT / "visa_buddy_data" / "models" / ("smoke" if smoke else data)
