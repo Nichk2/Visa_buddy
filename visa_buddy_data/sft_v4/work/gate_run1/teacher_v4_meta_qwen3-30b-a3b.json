@@ -1,0 +1,5 @@
+{
+ "teacher": "Qwen/Qwen3-30B-A3B-Instruct-2507",
+ "vllm_version": "0.31.0",
+ "received_sha256": "1c63d6c78e6e8407a37f05ff5dd75391b6692d642dbb3efa9da0056eb29617d7"
+}

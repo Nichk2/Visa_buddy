@@ -1,0 +1,36 @@
+{
+ "teacher": "qwen3-30b-a3b",
+ "thresholds": {
+  "wrong_rules_shown_max": 1,
+  "must_refuse_min": 31,
+  "gold_fact_coverage_min": 0.762,
+  "gold_over_refusal_max": 0.1
+ },
+ "wrong_rules_shown": 2,
+ "must_refuse_refused": 29,
+ "gold": {
+  "metrics_version": 2,
+  "n": 66,
+  "n_answerable": 54,
+  "n_must_refuse": 12,
+  "cite_when_answering": 1.0,
+  "over_refusal_rate": 0.074,
+  "abstained_answer_not_in_context": 0,
+  "contradicts_source": 0.0,
+  "wrong_verdict_rate": 0.0,
+  "answer_in_context_rate": 0.944,
+  "citation_hit": 0.926,
+  "fact_coverage": 0.796,
+  "refusal_correct": 0.909,
+  "refusal_correct_on_must_refuse": 0.833,
+  "false_refusal_rate": 0.074,
+  "unsupported": 0.0
+ },
+ "checks": {
+  "wrong_rules_shown": false,
+  "must_refuse": false,
+  "gold_fact_coverage": true,
+  "gold_over_refusal": true
+ },
+ "passed": false
+}

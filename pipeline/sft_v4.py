@@ -207,11 +207,11 @@ def _grounded(answer, quotes):
     return sum(t in ctx for t in toks) / len(toks) if toks else 0.0
 
 
-def build(teacher: str = "mistral-small-3.2"):
+def build(teacher: str = "mistral-small-3.2", gate_exception: bool = False):
     from .v4 import EXTRACT_SYSTEM, ANSWER_SYSTEM, answer_messages, extract_messages
     rep = json.loads((WORK / f"teacher_gate_report{_sfx(teacher)}.json").read_text())
-    if not rep["passed"]:
-        sys.exit("teacher gate failed: its rows are not used")
+    if not rep["passed"] and not gate_exception:
+        sys.exit("teacher gate failed: its rows are not used (an exception needs --gate-exception, see V4_PLAN.md)")
     items_ = {r["item_id"]: r for r in _jsonl(WORK / "pipeline_items.jsonl")}
     ev_urls = {u for r in _eval_rows() for u in r["source_urls"]}
     drops, ext_rows, ans_rows = Counter(), [], []
@@ -268,7 +268,8 @@ def build(teacher: str = "mistral-small-3.2"):
     print(card["md"].split("## 20 random")[0])
     tracking.record("sft_build:v4", inputs=[WORK / f"teacher_pipeline_raw{_sfx(teacher)}.jsonl", WORK / "pipeline_items.jsonl"],
                     outputs=[SFT / "train.jsonl", SFT / "valid.jsonl", SFT / "DATA_CARD.md"],
-                    config={"teacher": teacher, "refusal_share": REFUSAL_SHARE, "grounded_min": GROUNDED_MIN, "seed": SEED},
+                    config={"teacher": teacher, "refusal_share": REFUSAL_SHARE, "grounded_min": GROUNDED_MIN, "seed": SEED,
+                            "gate_passed": rep["passed"], "gate_exception": gate_exception},
                     metrics=card["metrics"])
 
 
@@ -300,7 +301,9 @@ def _card(train, valid, drops):
 
 if __name__ == "__main__":
     cmd, arg = sys.argv[1], (sys.argv[2] if len(sys.argv) > 2 else None)
-    if cmd in ("gate", "build"):
-        {"gate": gate, "build": build}[cmd](arg or "mistral-small-3.2")
+    if cmd == "gate":
+        gate(arg or "mistral-small-3.2")
+    elif cmd == "build":
+        build(arg or "mistral-small-3.2", gate_exception="--gate-exception" in sys.argv)
     else:
         {"select": select, "items": items}[cmd]()

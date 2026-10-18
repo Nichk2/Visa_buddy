@@ -6,8 +6,8 @@
   "gold_fact_coverage_min": 0.762,
   "gold_over_refusal_max": 0.1
  },
- "wrong_rules_shown": 2,
- "must_refuse_refused": 29,
+ "wrong_rules_shown": 1,
+ "must_refuse_refused": 30,
  "gold": {
   "metrics_version": 2,
   "n": 66,
@@ -21,13 +21,13 @@
   "answer_in_context_rate": 0.944,
   "citation_hit": 0.926,
   "fact_coverage": 0.796,
-  "refusal_correct": 0.909,
-  "refusal_correct_on_must_refuse": 0.833,
+  "refusal_correct": 0.924,
+  "refusal_correct_on_must_refuse": 0.917,
   "false_refusal_rate": 0.074,
   "unsupported": 0.0
  },
  "checks": {
-  "wrong_rules_shown": false,
+  "wrong_rules_shown": true,
   "must_refuse": false,
   "gold_fact_coverage": true,
   "gold_over_refusal": true
