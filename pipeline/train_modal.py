@@ -160,7 +160,7 @@ def train(train_rows: list, valid_rows: list, smoke: bool = False, version: str 
     with open(out / "valid_outputs.jsonl", "w") as f:
         for e in epoch_scores:
             for r, o in zip(valid_rows, e["outputs"]):
-                f.write(json.dumps({"epoch": e["epoch"], "id": r["id"], "kind": r["kind"], "output": o}, ensure_ascii=False) + "\n")
+                f.write(json.dumps({"epoch": e["epoch"], "id": r.get("id") or r.get("item_id"), "task": r.get("task"), "kind": r["kind"], "output": o}, ensure_ascii=False) + "\n")
     meta = {"base": base, "gpu": GPU, "hp": hp, "smoke": smoke, "data_version": version, "trainable_params": trainable,
             "versions": {"torch": torch.__version__, "transformers": transformers.__version__, "peft": peft.__version__},
             "received_sha256": {"train": _digest(train_rows), "valid": _digest(valid_rows)},
