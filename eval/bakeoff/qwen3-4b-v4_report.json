@@ -1,0 +1,98 @@
+{
+ "model": "qwen3-4b-v4",
+ "wrong_rules_shown": 2,
+ "must_refuse_refused": 31,
+ "median_latency_s_gpu": 0.316,
+ "by_set": {
+  "gold_v2": {
+   "metrics_version": 2,
+   "n": 66,
+   "n_answerable": 54,
+   "n_must_refuse": 12,
+   "cite_when_answering": 1.0,
+   "over_refusal_rate": 0.074,
+   "abstained_answer_not_in_context": 1,
+   "contradicts_source": 0.0,
+   "wrong_verdict_rate": 0.0,
+   "answer_in_context_rate": 0.944,
+   "citation_hit": 0.907,
+   "fact_coverage": 0.756,
+   "refusal_correct": 0.909,
+   "refusal_correct_on_must_refuse": 0.917,
+   "false_refusal_rate": 0.093,
+   "unsupported": 0.0,
+   "status": {
+    "answered": 49,
+    "quotes_only": 1,
+    "refused_no_quotes": 14,
+    "refused_policy": 2
+   }
+  },
+  "safety_v1": {
+   "metrics_version": 2,
+   "n": 26,
+   "n_answerable": 6,
+   "n_must_refuse": 20,
+   "cite_when_answering": 1.0,
+   "over_refusal_rate": 0.167,
+   "abstained_answer_not_in_context": 0,
+   "contradicts_source": 0.0,
+   "wrong_verdict_rate": 0.0,
+   "answer_in_context_rate": 1.0,
+   "citation_hit": 0.833,
+   "fact_coverage": 0.667,
+   "refusal_correct": 0.962,
+   "refusal_correct_on_must_refuse": 1.0,
+   "false_refusal_rate": 0.167,
+   "unsupported": 0.0,
+   "status": {
+    "refused_policy": 19,
+    "refused_no_quotes": 2,
+    "answered": 5
+   }
+  },
+  "rules_v1": {
+   "metrics_version": 2,
+   "n": 23,
+   "n_answerable": 23,
+   "n_must_refuse": 0,
+   "cite_when_answering": 1.0,
+   "over_refusal_rate": 0.087,
+   "abstained_answer_not_in_context": 2,
+   "contradicts_source": 0.0,
+   "wrong_verdict_rate": 0.087,
+   "answer_in_context_rate": 0.87,
+   "citation_hit": 0.826,
+   "fact_coverage": 0.696,
+   "refusal_correct": 0.826,
+   "refusal_correct_on_must_refuse": null,
+   "false_refusal_rate": 0.174,
+   "unsupported": 0.0,
+   "status": {
+    "answered": 19,
+    "refused_no_quotes": 4
+   }
+  },
+  "rules_yes_v1": {
+   "metrics_version": 2,
+   "n": 11,
+   "n_answerable": 11,
+   "n_must_refuse": 0,
+   "cite_when_answering": 1.0,
+   "over_refusal_rate": 0.0,
+   "abstained_answer_not_in_context": 0,
+   "contradicts_source": 0.0,
+   "wrong_verdict_rate": 0.0,
+   "answer_in_context_rate": 0.909,
+   "citation_hit": 1.0,
+   "fact_coverage": 0.818,
+   "refusal_correct": 1.0,
+   "refusal_correct_on_must_refuse": null,
+   "false_refusal_rate": 0.0,
+   "unsupported": 0.0,
+   "status": {
+    "answered": 11
+   }
+  }
+ }
+}

@@ -1,0 +1,10 @@
+{
+ "model": "Qwen/Qwen3-4B-Instruct-2507",
+ "adapter": true,
+ "tag": "qwen3-4b-v4",
+ "vllm_version": "0.31.0",
+ "gpu": "L4",
+ "received_sha256": "0430fa89667dfa7d9b643719f48b100d68048b50a3a2b7ca0d6b1cf108c8a1a9",
+ "median_latency_s": 0.316,
+ "note": "latency is per question per step in a batched GPU call; Mac latency is measured separately"
+}

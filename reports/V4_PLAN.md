@@ -130,6 +130,25 @@ a quote describing a temporary policy with an end date before today is dropped, 
 one retry without those passages. On the saved outputs it flags exactly one quote (r03). Both
 changes need a model re-run to be measured; they will be measured with the next model run.
 
+## Phase 6 results: fine-tuned vs untuned Qwen3-4B (2026-10-18)
+
+QLoRA on 862 rows (teacher Qwen3-30B-A3B, gate exception), epoch 2 selected (v4 valid score 0.833).
+Same current pipeline, same 126 eval questions, run together on Modal (vLLM, L4):
+
+| | Untuned | Fine-tuned v4 | Target |
+|---|---|---|---|
+| Wrong rules shown | 2 (r03, y02) | 2 (r03, r20) | 0 |
+| Must-refuse refused | 31 | 31 | 32 |
+| Fact coverage gold / rules / yes | 0.762 / 0.609 / 0.727 | 0.756 / **0.696** / **0.818** | 0.671 / 0.630 / 0.6 |
+| Over-refusal gold / rules | 0.130 / 0.174 | **0.074 / 0.087** | 0.05 / 0.05 |
+| Yes-rules wrong verdict | 1 | **0** | 0 |
+
+**Decision under the added rule: the fine-tuned model ships** (at least as good on every criterion, better on
+facts-rules, over-refusal and the yes-rules verdict). It still **fails** criteria 1, 2 and 5: r03 (quotes from
+the expired COVID section that carry no date), r20 (new: "Yes, you need an eTA ... including driving",
+supported by an unrelated quote; the verifier checks numbers, negation and Yes/No, not whole claims), rf10
+(resume-citizenship fee). Per the rule above these are left as known weaknesses; the sealed final exam decides.
+
 ## Changes to this plan
 
 - 2026-10-18, **gate exception (the project owner's decision)**: teacher gates for phase 5 data. Mistral Small 3.2
