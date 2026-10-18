@@ -111,7 +111,7 @@ def verify_quotes(raw_quotes, hits):
                     r = SequenceMatcher(None, qt, nu).ratio()
                 if r > score or (r == score and best and len(u) < len(best[0])):
                     best, score = (u, h), r
-        if best and score >= MIN_QUOTE_MATCH and best[0] not in seen:
+        if best and score >= MIN_QUOTE_MATCH and best[0] not in seen and not _PLACEHOLDER.search(best[0]):
             seen.add(best[0])
             kept.append({"text": best[0], "title": best[1]["title"], "url": best[1]["url"], "match": round(score, 3)})
     return kept
@@ -138,6 +138,9 @@ def _to_date(text):
     return date(year, month, day)
 
 
+_PLACEHOLDER = re.compile(r"error loading", re.I)  # canada.ca fills fees by JavaScript; our copy keeps the placeholder
+
+
 def is_expired(text, today=None):
     today = today or date.today()
     for sent in re.split(r"(?<=[.!?])\s+|\n", text):
@@ -146,9 +149,53 @@ def is_expired(text, today=None):
     return False
 
 
+def _expired_pages(hits, today=None):
+    """Pages (URLs) among the retrieved sources that describe an ended temporary policy."""
+    return {h["url"] for h in hits if is_expired(h["text"], today)}
+
+
+def _in_expired_section(quote, url, expired_pages):
+    """Page-level expiry: in bake-off run 3 the model dropped r03's dated quote and quoted
+    "You're eligible for this temporary policy if..." from another chunk of the same page. On a
+    page that describes an ended temporary policy, quotes that refer to a temporary policy or the
+    pandemic belong to that policy too. (A chunk-level first version missed it: the two
+    sentences were in different chunks.)"""
+    return url in expired_pages and bool(_TEMP.search(quote))
+
+
 def _without_expired(hits, today=None):
-    """The same sources with expired lines removed, for the one retry."""
-    return [{**h, "text": "\n".join(l for l in h["text"].splitlines() if not is_expired(l, today))} for h in hits]
+    """The same sources with expired lines removed (and, on pages with an ended temporary
+    policy, the lines that refer to it), for the one retry."""
+    exp = _expired_pages(hits, today)
+    return [{**h, "text": "\n".join(l for l in h["text"].splitlines()
+                                     if not is_expired(l, today) and not (h["url"] in exp and _TEMP.search(l)))}
+            for h in hits]
+
+
+_LEAD_YN = re.compile(r"^\W*(yes|no)\b[,.!]?\s*", re.I)
+_NEG_WORDS = re.compile(r"\b(not|no|never|don't|doesn't|can't|cannot|isn't|aren't|won't|wouldn't|shouldn't|mustn't)\b", re.I)
+
+
+def verdict_conflict(answer):
+    """True when the opening Yes/No contradicts the clause right after it: "Yes, you do not have
+    to show results" (teacher, rules r01) or "No, you can apply". Checked on the first clause
+    only, after normalizing curly apostrophes; refined once after its first version flagged
+    correct answers ("No. You can’t...", "No. You can only start...", "Yes, you may..., and this
+    does not affect...")."""
+    a = norm(answer)
+    m = _LEAD_YN.match(a)
+    if not m:
+        return False
+    first = re.split(r"(?<=[.!?])\s+", a[m.end():].strip(), maxsplit=1)[0]
+    clause = re.split(r",|;|\b(?:and|but|because|as long as|if|unless|while|which)\b", first, maxsplit=1)[0]
+    if not clause.strip():
+        return False
+    negated = len(_NEG_WORDS.findall(clause)) % 2 == 1
+    if m.group(1) == "yes":
+        return negated
+    if negated or re.search(r"\bonly\b", clause):  # "No. You can only..." restricts: consistent
+        return False
+    return re.match(r"(you|they|he|she|we)\s+(can|may|are allowed to|are eligible)\b", clause.strip()) is not None
 
 
 def verify_answer(answer, quotes):
@@ -156,6 +203,8 @@ def verify_answer(answer, quotes):
     qtext = "\n".join(q["text"] for q in quotes)
     problems = [f"number not in quotes: {n}" for n in _numbers(URL_RE.sub(" ", answer)) if not _number_in(n, norm(qtext))]
     problems += [f"polarity flip: {a!r} vs {s!r}" for a, s in polarity_flips(answer, qtext, flexible=True)]
+    if verdict_conflict(answer):
+        problems.append("yes/no contradicts its own sentence")
     return problems
 
 
@@ -178,8 +227,10 @@ def run_batch(questions, hits_list, chat, max_tokens=(400, 200), today=None):
             r.update(status="refused_policy", response=REFUSAL_OUTPUT)
         else:
             quotes = verify_quotes(obj.get("quotes"), hits)
-            r["expired_dropped"] = [q_["text"] for q_ in quotes if is_expired(q_["text"], today)]
-            r["quotes"] = [q_ for q_ in quotes if not is_expired(q_["text"], today)]
+            exp = _expired_pages(hits, today)
+            gone = lambda q_: is_expired(q_["text"], today) or _in_expired_section(q_["text"], q_["url"], exp)
+            r["expired_dropped"] = [q_["text"] for q_ in quotes if gone(q_)]
+            r["quotes"] = [q_ for q_ in quotes if not gone(q_)]
             if not r["quotes"] and r["expired_dropped"]:
                 retry.append(i)  # only expired passages were quoted: try once without them
         results.append(r)
@@ -192,7 +243,9 @@ def run_batch(questions, hits_list, chat, max_tokens=(400, 200), today=None):
             if obj.get("refuse") is True:
                 results[i].update(status="refused_policy", response=REFUSAL_OUTPUT)
             else:
-                results[i]["quotes"] = [q_ for q_ in verify_quotes(obj.get("quotes"), clean[i]) if not is_expired(q_["text"], today)]
+                exp = _expired_pages(hits_list[i], today)
+                results[i]["quotes"] = [q_ for q_ in verify_quotes(obj.get("quotes"), clean[i])
+                                        if not is_expired(q_["text"], today) and not _in_expired_section(q_["text"], q_["url"], exp)]
     to_answer = []
     for i, r in enumerate(results):
         if "status" in r:

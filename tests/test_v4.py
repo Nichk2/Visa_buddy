@@ -80,3 +80,33 @@ def test_multiline_quote_keeps_line_breaks():
     hits = [{"url": U, "title": "Funds", "text": "- you can't use equity on real property as proof of settlement funds\n- you can't borrow this money from another person"}]
     q = verify_quotes(["you can't use equity on real property as proof of settlement funds you can't borrow this money from another person"], hits)
     assert q and "\n" in q[0]["text"]
+
+
+def test_placeholder_quotes_dropped():
+    hits = [{"url": U, "title": "Fees", "text": "Sponsor fee: [Error loading fee. Check the fee list ] for each application."}]
+    assert verify_quotes(["Sponsor fee: [Error loading fee. Check the fee list ] for each application."], hits) == []
+
+
+def test_verdict_conflict():
+    from pipeline.v4 import verdict_conflict
+    assert verdict_conflict("Yes, you do not have to show language test results because you applied before November 1, 2024.")
+    assert verdict_conflict("No, you can apply online.")
+    for ok in ["No. You can't use equity on real property.", "Yes, you must stop working.", "No. You must declare all family members.",
+               "Yes. You can work remotely for an employer outside Canada.", "You must complete at least 50% in Canada.",
+               "No. You can’t get a PGWP if you already had one.",  # curly apostrophe
+               "No. You can only start working when you start your study program.",  # "only" restricts
+               "Yes, you may study part-time in your final semester, and this does not affect eligibility."]:  # later clause
+        assert not verdict_conflict(ok), ok
+
+
+def test_section_level_expiry():
+    from datetime import date
+    from pipeline.v4 import _expired_pages, _in_expired_section
+    # the dated sentence and the "this temporary policy" sentence are in different chunks of one page
+    hits = [{"url": U, "title": "PGWP", "text": "You can complete up to 100% of your studies online from outside Canada between March 2020 and "
+             "August 31, 2022, because of a temporary COVID-19 policy."},
+            {"url": U, "title": "PGWP", "text": "You're eligible for this temporary policy if you meet all of the following criteria:\n"
+             "You must complete at least 50% of your program within Canada."}]
+    exp = _expired_pages(hits, date(2026, 10, 18))
+    assert _in_expired_section("You're eligible for this temporary policy if you meet all of the following criteria:", U, exp)
+    assert not _in_expired_section("You must complete at least 50% of your program within Canada.", U, exp)
