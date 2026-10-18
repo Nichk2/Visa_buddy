@@ -1,0 +1,28 @@
+{
+ "selected_epoch": 2,
+ "selection_metric": "valid fact_coverage",
+ "epochs": [
+  {
+   "epoch": 1,
+   "step": 108,
+   "v4_valid_score": 0.7711,
+   "quote_match": 0.6852,
+   "refusal_accuracy": 0.7143,
+   "answer_coverage": 0.9137,
+   "false_refusals": 6,
+   "bad_json": 1,
+   "fact_coverage": 0.7711
+  },
+  {
+   "epoch": 2,
+   "step": 216,
+   "v4_valid_score": 0.8325,
+   "quote_match": 0.7509,
+   "refusal_accuracy": 0.8571,
+   "answer_coverage": 0.8894,
+   "false_refusals": 2,
+   "bad_json": 1,
+   "fact_coverage": 0.8325
+  }
+ ]
+}

@@ -32,43 +32,67 @@ def _digest(obj) -> str:
 
 
 @app.function(gpu="L4", timeout=60 * 60, volumes={"/root/.cache/huggingface": hf_cache, "/out": out_vol})
-def run(model_id: str, items: list) -> dict:
+def run(model_id: str, items: list, adapter_files: dict | None = None, tag: str = "") -> dict:
+    import os
+
     import vllm
     from vllm import LLM, SamplingParams
 
     from pipeline.v4 import run_batch
 
-    llm = LLM(model=model_id, max_model_len=8192, gpu_memory_utilization=0.9)
+    lora = None
+    if adapter_files:  # the fine-tuned LoRA adapter, sent with the call and loaded by vLLM
+        from vllm.lora.request import LoRARequest
+        os.makedirs("/tmp/adapter", exist_ok=True)
+        for name, data in adapter_files.items():
+            with open(f"/tmp/adapter/{name}", "wb") as f:
+                f.write(data)
+        lora = LoRARequest("v4", 1, "/tmp/adapter")
+    llm = LLM(model=model_id, max_model_len=8192, gpu_memory_utilization=0.9, enable_lora=bool(adapter_files), max_lora_rank=8)
     times = []
 
     def chat(convs, max_tokens):
         t = time.time()
-        outs = llm.chat(convs, SamplingParams(temperature=0.0, max_tokens=max_tokens), use_tqdm=False)
+        outs = llm.chat(convs, SamplingParams(temperature=0.0, max_tokens=max_tokens), use_tqdm=False, lora_request=lora)
         times.append((time.time() - t) / max(len(convs), 1))
         return [o.outputs[0].text for o in outs]
 
     results = run_batch([it["question"] for it in items], [it["hits"] for it in items], chat)
     rows = [{"set": it["set"], "id": it["id"], **r} for it, r in zip(items, results)]
-    res = {"model": model_id, "vllm_version": vllm.__version__, "gpu": "L4", "received_sha256": _digest(items),
+    res = {"model": model_id, "adapter": bool(adapter_files), "tag": tag, "vllm_version": vllm.__version__, "gpu": "L4",
+           "received_sha256": _digest(items),
            "median_latency_s": round(sorted(times)[len(times) // 2], 3) if times else None,
            "note": "latency is per question per step in a batched GPU call; Mac latency is measured separately",
            "rows": rows}
-    with open(f"/out/{model_id.replace('/', '__')}.json", "w") as f:
+    with open(f"/out/{tag or model_id.replace('/', '__')}.json", "w") as f:
         json.dump(res, f, ensure_ascii=False)
     out_vol.commit()
     return res
 
 
 @app.function(volumes={"/out": out_vol})
-def fetch(model_id: str) -> dict:
-    with open(f"/out/{model_id.replace('/', '__')}.json") as f:
+def fetch(model_id: str, tag: str = "") -> dict:
+    with open(f"/out/{tag or model_id.replace('/', '__')}.json") as f:
         return json.load(f)
 
 
 @app.local_entrypoint()
-def main(fetch_only: bool = False, only: str = ""):
+def main(fetch_only: bool = False, only: str = "", compare_v4: bool = False):
     from pipeline.bakeoff import MODELS, OUT, slug
     items = [json.loads(l) for l in (OUT / "items.jsonl").read_text().splitlines() if l.strip()]
+    if compare_v4:  # phase 6: untuned vs fine-tuned Qwen3-4B, same pipeline, same run
+        base = "Qwen/Qwen3-4B-Instruct-2507"
+        adir = ROOT / "visa_buddy_data" / "models" / "v4"
+        files = {n: (adir / n).read_bytes() for n in ("adapter_config.json", "adapter_model.safetensors")}
+        jobs = [("qwen3-4b-untuned", None), ("qwen3-4b-v4", files)]
+        calls = [fetch.spawn(base, t) if fetch_only else run.spawn(base, items, f, t) for t, f in jobs]
+        for (t, _), call in zip(jobs, calls):
+            res = call.get()
+            assert res["received_sha256"] == _digest(items), f"{t}: job answered different questions"
+            (OUT / f"{t}_raw.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in res["rows"]))
+            (OUT / f"{t}_meta.json").write_text(json.dumps({k: v for k, v in res.items() if k != "rows"}, indent=1))
+            print("wrote", t, flush=True)
+        return
     models = [m for m in MODELS if not only or only in m]
     print(f"{len(items)} questions x {len(models)} models on L4", flush=True)
     calls = [fetch.spawn(m) if fetch_only else run.spawn(m, items) for m in models]  # all models in parallel
