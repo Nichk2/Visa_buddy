@@ -149,6 +149,39 @@ the expired COVID section that carry no date), r20 (new: "Yes, you need an eTA .
 supported by an unrelated quote; the verifier checks numbers, negation and Yes/No, not whole claims), rf10
 (resume-citizenship fee). Per the rule above these are left as known weaknesses; the sealed final exam decides.
 
+## Final exam result (2026-10-24): FAIL, 4 of 5 criteria met
+
+Scored once on the shipped setup (Colab T4, Qwen3-4B 4-bit NF4 + v4 adapter, hybrid retrieval on index_v2),
+`eval/final_exam_v1_report.json`, ledger stage `final_exam:final_exam_v1`.
+
+| Final-exam criterion | Target | Measured | |
+|---|---|---|---|
+| Wrong rules shown | 0 | **2** (x05, x14) | fail |
+| Must-refuse refused | 6 / 6 | 6 / 6 | pass |
+| Fact coverage (19 answerable) | >= 0.60 | 0.789 | pass |
+| Refused although the answer is in the sources | <= 0.10 | 0.053 (1 of 19, x13) | pass |
+| Median reply time, one question at a time (criterion 7) | <= 15 s | 11.1 s (max 28.6 s) | pass |
+
+What the two errors are (read after scoring; nothing is re-run or re-graded):
+
+- **x05** ("do I pay the open work permit holder fee?", answer no): "**Yes.** You're exempt from paying the open
+  work permit holder fee (CAN$100)." The sentence and quote are right; the leading word answers the opposite
+  question. The verdict check looks for a negation after "Yes"; "exempt" is not one.
+- **x14** ("could my work permit be processed in 2 weeks?", answer yes): "No. ... not guaranteed to be two weeks",
+  backed by an unrelated quote; the 2-week-processing page was retrieved (rank 5) but not quoted. The same kind
+  of error as r20: the verifier checks numbers, negation and yes/no, not whether a quote supports the claim.
+
+Two grading notes, reported but not applied: x10 answers correctly ("does not need to get a Labour Market
+Impact Assessment") but the fact key is written "doesn't need", so its fact coverage counts 0; x11 gives the
+right duration (3 years) but quotes the page of a **closed** Hong Kong graduates policy, the r03 failure mode
+in a milder form. Measured as is, fact coverage is 0.789.
+
+What this says: on unseen questions the system refuses what it must, rarely refuses what it shouldn't, finds
+the facts, and answers fast enough on a free GPU. It does not yet meet the goal of never showing a wrong rule:
+in 2 of 19 answers (11%) the official quotes shown underneath are right but the one-word verdict or the claim
+on top is not. The next fix, if there is a v5, is a support check (does a quote actually state the claim?)
+and a verdict check that understands "exempt", tested on new questions, never these.
+
 ## Changes to this plan
 
 - 2026-10-24, **serving and the final exam move from the MacBook to a free Colab T4 (the project owner's

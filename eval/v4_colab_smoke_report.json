@@ -1,0 +1,40 @@
+{
+ "tag": "v4_colab_smoke",
+ "gold_file": "gold_v2.jsonl",
+ "model": "Qwen/Qwen3-4B-Instruct-2507",
+ "adapter": "/content/Visa_buddy/visa_buddy_data/models/v4",
+ "quantization": "4bit-nf4",
+ "gpu": "Tesla T4",
+ "retriever": "hybrid index_v2",
+ "pipeline": "v4 extract->answer->verify",
+ "grader_version": 3,
+ "measured": {
+  "wrong_rules_shown": 0,
+  "must_refuse_refused": 0,
+  "fact_coverage": 0.667,
+  "over_refusal_rate": 0.0
+ },
+ "status": {
+  "answered": 3
+ },
+ "median_reply_s": 11.61,
+ "max_reply_s": 13.6,
+ "overall": {
+  "metrics_version": 2,
+  "n": 3,
+  "n_answerable": 3,
+  "n_must_refuse": 0,
+  "cite_when_answering": 1.0,
+  "over_refusal_rate": 0.0,
+  "abstained_answer_not_in_context": 0,
+  "contradicts_source": 0.0,
+  "wrong_verdict_rate": 0.0,
+  "answer_in_context_rate": 1.0,
+  "citation_hit": 1.0,
+  "fact_coverage": 0.667,
+  "refusal_correct": 1.0,
+  "refusal_correct_on_must_refuse": null,
+  "false_refusal_rate": 0.0,
+  "unsupported": 0.0
+ }
+}
