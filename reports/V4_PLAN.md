@@ -83,7 +83,7 @@ The result is reported as measured, pass or fail.
 4. Extract -> answer -> verify pipeline; measure criteria 1-5, 7, 8.
 5. SFT data (quote-first + knowledge-conflict), gated teacher, data card.
 6. LoRA on Modal; compare untuned vs tuned vs v3.
-7. Serve on the Mac.
+7. Serve on the Mac (changed 2026-10-24: serve on Colab; see Changes).
 
 ## Finding from phase 0
 
@@ -151,6 +151,16 @@ supported by an unrelated quote; the verifier checks numbers, negation and Yes/N
 
 ## Changes to this plan
 
+- 2026-10-24, **serving and the final exam move from the MacBook to a free Colab T4 (the project owner's
+  decision, made before the exam was run)**. The Mac has 8 GB and swaps heavily with a 4B model plus the
+  retriever; always-on paid GPU hosting is not worth it for a portfolio demo with near-zero traffic. So the
+  shipped system is: hybrid retrieval on index_v2, Qwen3-4B-Instruct-2507 in 4-bit NF4 (the precision the
+  adapter was trained in) with the v4 adapter, run on Colab's T4 at $0 (`pipeline/final_exam.py`, notebook
+  section 13; demo in section 14). The sealed exam is scored on exactly that setup, once. **Criterion 7 is
+  changed** from "runs on the MacBook, median reply <= 15 s" to "median reply <= 15 s on the Colab T4,
+  measured end to end, one question at a time"; the Mac is no longer a target. Phase 7 becomes "serve on
+  Colab". The comparison in phase 6 ran in bf16 on vLLM; the exam measures the 4-bit transformers path that
+  actually ships, so small differences from the phase 6 numbers are expected and not corrected for.
 - 2026-10-18, **gate exception (the project owner's decision)**: teacher gates for phase 5 data. Mistral Small 3.2
   failed (3 wrong rules, fact coverage 0.747, over-refusal 0.111). Qwen3-30B-A3B failed run 1 (2 wrong rules,
   29/32 refusals); after the shared-trap pipeline fixes, run 2 failed by one refusal (30/32 vs >= 31) while
@@ -164,5 +174,3 @@ supported by an unrelated quote; the verifier checks numbers, negation and Yes/N
   safety_v1, rules_v1 or rules_yes_v1; the sealed final exam decides.
 - 2026-10-17: phase 4's pipeline was built before the bake-off (phase 3), because a model has to be
   judged inside the pipeline it will run in.
-
-(none yet)
