@@ -1,0 +1,43 @@
+{
+ "source": "modal billing report (Modal's billed usage, per app and resource)",
+ "currency": "USD",
+ "period": [
+  "2026-10-13",
+  "2026-10-18"
+ ],
+ "modalTotal": 6.76,
+ "gpuOnly": 6.32,
+ "byRole": {
+  "teacher": 3.57,
+  "training": 2.51,
+  "comparison": 0.68
+ },
+ "byGpu": {
+  "H100": 3.3,
+  "A100-40GB": 2.41,
+  "L4": 0.61
+ },
+ "byApp": {
+  "visabuddy-train": {
+   "usd": 2.51,
+   "runs": 7
+  },
+  "visabuddy-teacher-v4": {
+   "usd": 1.87,
+   "runs": 3
+  },
+  "visabuddy-teacher": {
+   "usd": 1.7,
+   "runs": 6
+  },
+  "visabuddy-bakeoff": {
+   "usd": 0.68,
+   "runs": 4
+  }
+ },
+ "paidWithCredits": true,
+ "colab": {
+  "usd": 0,
+  "used_for": "evaluation, the final exam and the demo (free T4)"
+ }
+}

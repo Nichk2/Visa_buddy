@@ -1,0 +1,642 @@
+[
+ {
+  "object_id": "ap-UMUMIfhBWOYXK2CYEfFmy4",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "H100",
+  "cost": "0.48693895"
+ },
+ {
+  "object_id": "ap-UMUMIfhBWOYXK2CYEfFmy4",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.07782369"
+ },
+ {
+  "object_id": "ap-UMUMIfhBWOYXK2CYEfFmy4",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00386248"
+ },
+ {
+  "object_id": "ap-UMUMIfhBWOYXK2CYEfFmy4",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "CPU",
+  "cost": "0.01529073"
+ },
+ {
+  "object_id": "ap-azS5oYM3fmbU5CfY8NnzAA",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "A100-40GB",
+  "cost": "0.02741340"
+ },
+ {
+  "object_id": "ap-azS5oYM3fmbU5CfY8NnzAA",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00009944"
+ },
+ {
+  "object_id": "ap-azS5oYM3fmbU5CfY8NnzAA",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.00115516"
+ },
+ {
+  "object_id": "ap-azS5oYM3fmbU5CfY8NnzAA",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00048222"
+ },
+ {
+  "object_id": "ap-cNkfxvpNXeJ6ataUwPLy3i",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "H100",
+  "cost": "0.22523370"
+ },
+ {
+  "object_id": "ap-cNkfxvpNXeJ6ataUwPLy3i",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.00000102"
+ },
+ {
+  "object_id": "ap-cNkfxvpNXeJ6ataUwPLy3i",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00084065"
+ },
+ {
+  "object_id": "ap-cNkfxvpNXeJ6ataUwPLy3i",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00202463"
+ },
+ {
+  "object_id": "ap-id4D2GUZb739RidE8Bbgoo",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "A100-40GB",
+  "cost": "0.93502513"
+ },
+ {
+  "object_id": "ap-id4D2GUZb739RidE8Bbgoo",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00601785"
+ },
+ {
+  "object_id": "ap-id4D2GUZb739RidE8Bbgoo",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.00116020"
+ },
+ {
+  "object_id": "ap-id4D2GUZb739RidE8Bbgoo",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "CPU",
+  "cost": "0.02069562"
+ },
+ {
+  "object_id": "ap-ixQUHrZQeEuXsWcmozyQot",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "H100",
+  "cost": "0.15104725"
+ },
+ {
+  "object_id": "ap-ixQUHrZQeEuXsWcmozyQot",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.00000102"
+ },
+ {
+  "object_id": "ap-ixQUHrZQeEuXsWcmozyQot",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00057858"
+ },
+ {
+  "object_id": "ap-ixQUHrZQeEuXsWcmozyQot",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00160179"
+ },
+ {
+  "object_id": "ap-kCdVt2X4o07k1msORObUwo",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "H100",
+  "cost": "0.35833631"
+ },
+ {
+  "object_id": "ap-kCdVt2X4o07k1msORObUwo",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Network Egress",
+  "cost": "6.5E-7"
+ },
+ {
+  "object_id": "ap-kCdVt2X4o07k1msORObUwo",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00172741"
+ },
+ {
+  "object_id": "ap-kCdVt2X4o07k1msORObUwo",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00401495"
+ },
+ {
+  "object_id": "ap-mic5LbOJlSmC2na88h76FP",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "A100-40GB",
+  "cost": "0.47957808"
+ },
+ {
+  "object_id": "ap-mic5LbOJlSmC2na88h76FP",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00301885"
+ },
+ {
+  "object_id": "ap-mic5LbOJlSmC2na88h76FP",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.00115650"
+ },
+ {
+  "object_id": "ap-mic5LbOJlSmC2na88h76FP",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "CPU",
+  "cost": "0.01120788"
+ },
+ {
+  "object_id": "ap-pwkjviHY8NoTSNbg97PrsX",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "H100",
+  "cost": "0.18528661"
+ },
+ {
+  "object_id": "ap-pwkjviHY8NoTSNbg97PrsX",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Network Egress",
+  "cost": "9.1E-7"
+ },
+ {
+  "object_id": "ap-pwkjviHY8NoTSNbg97PrsX",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00066956"
+ },
+ {
+  "object_id": "ap-pwkjviHY8NoTSNbg97PrsX",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00195210"
+ },
+ {
+  "object_id": "ap-rqPjXMsCzJvL8g1do8ZZyn",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "A100-40GB",
+  "cost": "0.06066680"
+ },
+ {
+  "object_id": "ap-rqPjXMsCzJvL8g1do8ZZyn",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00111133"
+ },
+ {
+  "object_id": "ap-rqPjXMsCzJvL8g1do8ZZyn",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.01671869"
+ },
+ {
+  "object_id": "ap-rqPjXMsCzJvL8g1do8ZZyn",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-13T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00985015"
+ },
+ {
+  "object_id": "ap-zZJDyipSdCHjkGbV9IXb43",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-16T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00449661"
+ },
+ {
+  "object_id": "ap-zZJDyipSdCHjkGbV9IXb43",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-16T00:00:00",
+  "resource": "L4",
+  "cost": "0.20577771"
+ },
+ {
+  "object_id": "ap-zZJDyipSdCHjkGbV9IXb43",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-16T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.02366138"
+ },
+ {
+  "object_id": "ap-zZJDyipSdCHjkGbV9IXb43",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-16T00:00:00",
+  "resource": "CPU",
+  "cost": "0.01874426"
+ },
+ {
+  "object_id": "ap-3ggQ0thPV6zuxe6y2cRytl",
+  "description": "visabuddy-teacher-v4",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "H100",
+  "cost": "0.69994770"
+ },
+ {
+  "object_id": "ap-3ggQ0thPV6zuxe6y2cRytl",
+  "description": "visabuddy-teacher-v4",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.11399804"
+ },
+ {
+  "object_id": "ap-3ggQ0thPV6zuxe6y2cRytl",
+  "description": "visabuddy-teacher-v4",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00605503"
+ },
+ {
+  "object_id": "ap-3ggQ0thPV6zuxe6y2cRytl",
+  "description": "visabuddy-teacher-v4",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "CPU",
+  "cost": "0.01857219"
+ },
+ {
+  "object_id": "ap-EaEB55ixTAyFvnKmqGZWzm",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00118775"
+ },
+ {
+  "object_id": "ap-EaEB55ixTAyFvnKmqGZWzm",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "L4",
+  "cost": "0.05911286"
+ },
+ {
+  "object_id": "ap-EaEB55ixTAyFvnKmqGZWzm",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.00000847"
+ },
+ {
+  "object_id": "ap-EaEB55ixTAyFvnKmqGZWzm",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00323071"
+ },
+ {
+  "object_id": "ap-FKikdb1pBQ07W8P9CBtcVc",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "H100",
+  "cost": "0.17543687"
+ },
+ {
+  "object_id": "ap-FKikdb1pBQ07W8P9CBtcVc",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "Network Egress",
+  "cost": "9.8E-7"
+ },
+ {
+  "object_id": "ap-FKikdb1pBQ07W8P9CBtcVc",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00066640"
+ },
+ {
+  "object_id": "ap-FKikdb1pBQ07W8P9CBtcVc",
+  "description": "visabuddy-teacher",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00180754"
+ },
+ {
+  "object_id": "ap-p89QxkxmmDs55AdyyUJsah",
+  "description": "visabuddy-teacher-v4",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "H100",
+  "cost": "0.56610812"
+ },
+ {
+  "object_id": "ap-p89QxkxmmDs55AdyyUJsah",
+  "description": "visabuddy-teacher-v4",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.00009787"
+ },
+ {
+  "object_id": "ap-p89QxkxmmDs55AdyyUJsah",
+  "description": "visabuddy-teacher-v4",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00314159"
+ },
+ {
+  "object_id": "ap-p89QxkxmmDs55AdyyUJsah",
+  "description": "visabuddy-teacher-v4",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00555313"
+ },
+ {
+  "object_id": "ap-xjD0iXZjuTs6br9B9m1UHD",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00328702"
+ },
+ {
+  "object_id": "ap-xjD0iXZjuTs6br9B9m1UHD",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "L4",
+  "cost": "0.17832927"
+ },
+ {
+  "object_id": "ap-xjD0iXZjuTs6br9B9m1UHD",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.00002200"
+ },
+ {
+  "object_id": "ap-xjD0iXZjuTs6br9B9m1UHD",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-17T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00845323"
+ },
+ {
+  "object_id": "ap-AaMldYMzw7ZwETUWRlxiSC",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "A100-40GB",
+  "cost": "0.86270165"
+ },
+ {
+  "object_id": "ap-AaMldYMzw7ZwETUWRlxiSC",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00560866"
+ },
+ {
+  "object_id": "ap-AaMldYMzw7ZwETUWRlxiSC",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.00090143"
+ },
+ {
+  "object_id": "ap-AaMldYMzw7ZwETUWRlxiSC",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "CPU",
+  "cost": "0.01931270"
+ },
+ {
+  "object_id": "ap-DzAr4JHllVo18D9NMsjMjW",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "A100-40GB",
+  "cost": "0.02216667"
+ },
+ {
+  "object_id": "ap-DzAr4JHllVo18D9NMsjMjW",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00008307"
+ },
+ {
+  "object_id": "ap-DzAr4JHllVo18D9NMsjMjW",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.00086951"
+ },
+ {
+  "object_id": "ap-DzAr4JHllVo18D9NMsjMjW",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00040635"
+ },
+ {
+  "object_id": "ap-JN2CKozgQAwnmU5keF20hF",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "A100-40GB",
+  "cost": "0.02028372"
+ },
+ {
+  "object_id": "ap-JN2CKozgQAwnmU5keF20hF",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00006653"
+ },
+ {
+  "object_id": "ap-JN2CKozgQAwnmU5keF20hF",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "Network Egress",
+  "cost": "3.1E-7"
+ },
+ {
+  "object_id": "ap-JN2CKozgQAwnmU5keF20hF",
+  "description": "visabuddy-train",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00039782"
+ },
+ {
+  "object_id": "ap-aY9fkLIUIDSMSzpDUC5xWI",
+  "description": "visabuddy-teacher-v4",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "H100",
+  "cost": "0.45232268"
+ },
+ {
+  "object_id": "ap-aY9fkLIUIDSMSzpDUC5xWI",
+  "description": "visabuddy-teacher-v4",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.00010404"
+ },
+ {
+  "object_id": "ap-aY9fkLIUIDSMSzpDUC5xWI",
+  "description": "visabuddy-teacher-v4",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00253898"
+ },
+ {
+  "object_id": "ap-aY9fkLIUIDSMSzpDUC5xWI",
+  "description": "visabuddy-teacher-v4",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00537931"
+ },
+ {
+  "object_id": "ap-r6Ktx74aZHi2D6iQeQaV8m",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "Memory",
+  "cost": "0.00336921"
+ },
+ {
+  "object_id": "ap-r6Ktx74aZHi2D6iQeQaV8m",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "L4",
+  "cost": "0.16400209"
+ },
+ {
+  "object_id": "ap-r6Ktx74aZHi2D6iQeQaV8m",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "Network Egress",
+  "cost": "0.00001595"
+ },
+ {
+  "object_id": "ap-r6Ktx74aZHi2D6iQeQaV8m",
+  "description": "visabuddy-bakeoff",
+  "environment": "main",
+  "interval_start": "2026-10-18T00:00:00",
+  "resource": "CPU",
+  "cost": "0.00807369"
+ }
+]
